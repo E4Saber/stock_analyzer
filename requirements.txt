@@ -1,0 +1,10 @@
+streamlit==1.23.1
+akshare==1.9.80
+pandas==1.5.3
+numpy==1.24.3
+plotly==5.14.1
+# TA-Lib requires special installation on Windows:
+# Download the appropriate wheel file from https://github.com/cgohlke/talib-build/releases
+# ta_lib-0.6.3-cp311-cp311-win_amd64.whl for Python 3.11
+# Then install with: pip install <downloaded-wheel-file>
+# TA-Lib==0.4.24
