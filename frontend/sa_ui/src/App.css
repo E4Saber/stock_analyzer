@@ -1,0 +1,76 @@
+/* src/App.css */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f0f2f5;
+}
+
+.site-layout-content {
+  min-height: 280px;
+  padding: 24px;
+  background: #fff;
+}
+
+.logo {
+  height: 32px;
+  margin: 16px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ant-row-rtl .logo {
+  float: right;
+  margin: 16px 0 16px 24px;
+}
+
+.index-card-positive {
+  color: #3f8600;
+}
+
+.index-card-negative {
+  color: #cf1322;
+}
+
+.dashboard-container {
+  margin-bottom: 24px;
+}
+
+.stock-table-link {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.stock-table-link:hover {
+  color: #1890ff;
+}
+
+/* 修改Ant Design组件默认样式 */
+.ant-card {
+  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 
+              0 3px 6px 0 rgba(0, 0, 0, 0.12), 
+              0 5px 12px 4px rgba(0, 0, 0, 0.09);
+  border-radius: 4px;
+}
+
+.ant-statistic-title {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.ant-statistic-content {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+/* 响应式调整 */
+@media (max-width: 576px) {
+  .ant-statistic-content {
+    font-size: 18px;
+  }
+  
+  .ant-card {
+    margin-bottom: 16px;
+  }
+}
