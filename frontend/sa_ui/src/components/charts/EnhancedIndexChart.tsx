@@ -6,7 +6,7 @@ import {
   Row, Col, Statistic, Typography, DatePicker, Tooltip
 } from 'antd';
 import { 
-  LineChartOutlined, BarChartOutlined, CandlestickOutlined,
+  LineChartOutlined, BarChartOutlined, 
   DownOutlined, ReloadOutlined, FullscreenOutlined, 
   CaretUpOutlined, CaretDownOutlined 
 } from '@ant-design/icons';
@@ -76,14 +76,14 @@ const EnhancedIndexChart: React.FC<EnhancedIndexChartProps> = ({
         const response = await getStockKline(selectedIndex, apiPeriod, chartType);
         
         // 根据图表类型转换数据格式
-        let chartData;
+        let formattedData: any[] = [];
         if (chartType === 'line') {
-          chartData = response.data.map((item: any) => [
+          formattedData = response.data.map((item: any) => [
             item.date,
             item.close
           ]);
         } else if (chartType === 'candle') {
-          chartData = response.data.map((item: any) => [
+          formattedData = response.data.map((item: any) => [
             item.date,
             item.open,
             item.close,
@@ -92,7 +92,7 @@ const EnhancedIndexChart: React.FC<EnhancedIndexChartProps> = ({
             item.volume
           ]);
         } else if (chartType === 'bar') {
-          chartData = response.data.map((item: any) => [
+          formattedData = response.data.map((item: any) => [
             item.date,
             item.volume,
             item.close > item.open ? 1 : -1  // 用于确定柱状图颜色
@@ -104,13 +104,13 @@ const EnhancedIndexChart: React.FC<EnhancedIndexChartProps> = ({
           const startDate = dateRange[0].format('YYYY-MM-DD');
           const endDate = dateRange[1].format('YYYY-MM-DD');
           
-          chartData = chartData.filter((item: any) => {
+          formattedData = formattedData.filter((item: any) => {
             const itemDate = item[0];
             return itemDate >= startDate && itemDate <= endDate;
           });
         }
         
-        setKlineData(chartData);
+        setKlineData(formattedData);
       } catch (error) {
         console.error('获取K线数据失败:', error);
         setKlineData([]);
@@ -231,11 +231,6 @@ const EnhancedIndexChart: React.FC<EnhancedIndexChartProps> = ({
   // 处理标签页切换
   const handleTabChange = (key: string) => {
     setActiveTab(key);
-  };
-  
-  // 处理指标选择
-  const handleIndicatorChange = (indicators: string[]) => {
-    setIndicators(indicators);
   };
   
   // 切换全屏模式
@@ -701,8 +696,15 @@ const EnhancedIndexChart: React.FC<EnhancedIndexChartProps> = ({
                     title="当前点位" 
                     value={indices.find(i => i.code === selectedIndex)?.current || 0} 
                     precision={2}
-                    valueStyle={{ color: indices.find(i => i.code === selectedIndex)?.change >= 0 ? '#3f8600' : '#cf1322' }}
-                    prefix={indices.find(i => i.code === selectedIndex)?.change >= 0 ? <CaretUpOutlined /> : <CaretDownOutlined />}
+                    valueStyle={{ 
+                      color: (indices.find(i => i.code === selectedIndex)?.change || 0) >= 0 
+                        ? '#3f8600' 
+                        : '#cf1322' 
+                    }}
+                    prefix={(indices.find(i => i.code === selectedIndex)?.change || 0) >= 0 
+                      ? <CaretUpOutlined /> 
+                      : <CaretDownOutlined />
+                    }
                   />
                 </Card>
               </Col>
@@ -711,9 +713,13 @@ const EnhancedIndexChart: React.FC<EnhancedIndexChartProps> = ({
                 <Card size="small">
                   <Statistic 
                     title="涨跌幅" 
-                    value={indices.find(i => i.code === selectedIndex)?.change_percent || 0} 
+                    value={indices.find(i => i.code === selectedIndex)?.change_pct || 0} 
                     precision={2}
-                    valueStyle={{ color: indices.find(i => i.code === selectedIndex)?.change >= 0 ? '#3f8600' : '#cf1322' }}
+                    valueStyle={{ 
+                      color: (indices.find(i => i.code === selectedIndex)?.change || 0) >= 0 
+                        ? '#3f8600' 
+                        : '#cf1322' 
+                    }}
                     suffix="%"
                   />
                 </Card>
@@ -751,14 +757,14 @@ const EnhancedIndexChart: React.FC<EnhancedIndexChartProps> = ({
             <Radio.Group value={selectedIndex} onChange={handleIndexChange} buttonStyle="solid">
               {indices.map(index => (
                 <Radio.Button key={index.code} value={index.code}>
-                  <Tooltip title={`${index.name} ${index.current} (${index.change >= 0 ? '+' : ''}${index.change_percent}%)`}>
+                  <Tooltip title={`${index.name} ${index.current} (${index.change >= 0 ? '+' : ''}${index.change_pct}%)`}>
                     <span>
                       {index.name}
                       <span style={{ 
                         marginLeft: 5,
                         color: index.change >= 0 ? '#3f8600' : '#cf1322'
                       }}>
-                        {index.change >= 0 ? '+' : ''}{index.change_percent}%
+                        {index.change >= 0 ? '+' : ''}{index.change_pct}%
                       </span>
                     </span>
                   </Tooltip>
@@ -773,7 +779,7 @@ const EnhancedIndexChart: React.FC<EnhancedIndexChartProps> = ({
                   <Radio.Button value="line"><LineChartOutlined /></Radio.Button>
                 </Tooltip>
                 <Tooltip title="K线图">
-                  <Radio.Button value="candle"><CandlestickOutlined /></Radio.Button>
+                  <Radio.Button value="candle"><BarChartOutlined /></Radio.Button>
                 </Tooltip>
                 <Tooltip title="成交量">
                   <Radio.Button value="bar"><BarChartOutlined /></Radio.Button>

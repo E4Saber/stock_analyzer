@@ -129,6 +129,7 @@ celerybeat.pid
 
 # Environments
 .stock_analyzer_venv/
+.sa_server_venv/
 .env
 .venv
 env/

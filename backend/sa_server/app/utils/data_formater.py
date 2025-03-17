@@ -5,38 +5,50 @@ from app.data.modules.global_index_data import GlobalIndexData
 
 def ensure_serializable(data):
     """确保数据可以被序列化为JSON"""
-    if isinstance(data, pd.Series):
-        return data.to_dict()
+    if pd.isna(data):  # 处理NaN/None值
+        return None
+    elif isinstance(data, pd.Series):
+        return {k: None if pd.isna(v) else v for k, v in data.to_dict().items()}
     elif isinstance(data, pd.DataFrame):
-        return data.to_dict('records')
+        # 先将NaN转为None
+        df_copy = data.copy()
+        df_copy = df_copy.where(pd.notna(df_copy), None)
+        return df_copy.to_dict('records')
     elif isinstance(data, dict):
         return {k: ensure_serializable(v) for k, v in data.items()}
     elif isinstance(data, list):
         return [ensure_serializable(item) for item in data]
     elif hasattr(data, 'item'):  # numpy 数据类型
-        return data.item()
+        return None if pd.isna(data.item()) else data.item()
     else:
         return data
 
-
 def dataframe_to_cn_model_instances(df: pd.DataFrame, model: Type) -> List:
-    """
-    将DataFrame转换为模型实例列表
-    """
+    """将DataFrame转换为模型实例列表"""
+    # 先将NaN转为None，确保JSON兼容
+    df_copy = df.where(pd.notna(df), None)
+    
+    # 将DataFrame转换为字典列表
+    records = df_copy.to_dict('records')
+
+    # 再次检查并确保没有NaN值 (DataFrame.to_dict可能不会正确处理所有NaN)
+    for record in records:
+        for key, value in list(record.items()):
+            if pd.isna(value):
+                record[key] = None
+    
     # 声明一个TypeAdapter
     ta = TypeAdapter(List[model])
-
-    # 将DataFrame转换为字典列表
-    records = df.to_dict('records')
-
+    
     # 批量创建模型实例
     index_data_list = ta.validate_python(records)
-
+    
     return index_data_list
 
 def yahoo_finance_data_to_global_index_data(
     info: pd.DataFrame,
-    code: str
+    code: str,
+    name: str
 ) -> List[GlobalIndexData]:
     """
     将Yahoo Finance的数据转换为GlobalIndexData实例列表
@@ -70,10 +82,16 @@ def yahoo_finance_data_to_global_index_data(
     
     # 添加ts_code列
     df['ts_code'] = code
+
+    # 添加name列
+    df['name'] = name
     
     # 计算前收盘价 (pre_close) - 使用前一天的收盘价
     df['pre_close'] = df['close'].shift(1)
     
+    # 处理所有NaN值，替换为None
+    df = df.where(pd.notna(df), None)
+
     # 计算剩余可选字段
     def transform_and_fill(record):
         # 计算涨跌点 (change)
@@ -105,6 +123,12 @@ def yahoo_finance_data_to_global_index_data(
     records = df.to_dict('records')
     processed_records = [transform_and_fill(record) for record in records]
     
+    # 最终确保所有记录中没有NaN值
+    for record in processed_records:
+        for key, value in list(record.items()):
+            if pd.isna(value):
+                record[key] = None
+
     # 使用TypeAdapter转换为模型实例
     from pydantic import TypeAdapter
     from typing import List

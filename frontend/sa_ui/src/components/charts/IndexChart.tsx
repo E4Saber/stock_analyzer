@@ -10,7 +10,7 @@ interface IndexChartProps {
 }
 
 const IndexChart: React.FC<IndexChartProps> = ({ indices }) => {
-  const [selectedIndex, setSelectedIndex] = useState<string>(indices[0]?.code || '');
+  const [selectedIndex, setSelectedIndex] = useState<string>(indices[0]?.ts_code || '');
   const [klineData, setKlineData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [period, setPeriod] = useState<string>('5d');
@@ -51,7 +51,7 @@ const IndexChart: React.FC<IndexChartProps> = ({ indices }) => {
 
   // 图表选项
   const getOption = () => {
-    const selectedName = indices.find(i => i.code === selectedIndex)?.name || '';
+    const selectedName = indices.find(i => i.ts_code === selectedIndex)?.name || '';
     
     return {
       title: {
@@ -140,7 +140,7 @@ const IndexChart: React.FC<IndexChartProps> = ({ indices }) => {
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
         <Radio.Group value={selectedIndex} onChange={handleIndexChange}>
           {indices.map(index => (
-            <Radio.Button key={index.code} value={index.code}>
+            <Radio.Button key={index.ts_code} value={index.ts_code}>
               {index.name}
             </Radio.Button>
           ))}

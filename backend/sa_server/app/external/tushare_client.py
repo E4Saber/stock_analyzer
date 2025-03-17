@@ -8,7 +8,7 @@ from app.utils.data_formater import ensure_serializable
 from app.data.modules.cn_index_data import CNIndexBaseData, CNIndexData
 
 from app.utils.data_tpye_checker import data_check
-from app.utils.data_formater import dataframe_to_model_instances
+from app.utils.data_formater import dataframe_to_cn_model_instances
 
 # 加载环境变量
 load_dotenv()
@@ -49,7 +49,7 @@ def get_index_data() -> List[Dict[str, Any]]:
 
             if basic_info is not None and quote_info is not None:
                 cn_index_base_data = CNIndexBaseData(**basic_info)
-                cn_index_data = dataframe_to_model_instances(quote_info, CNIndexData)
+                cn_index_data = dataframe_to_cn_model_instances(quote_info, CNIndexData)
         
         return {
             "cn_index_base_data": cn_index_base_data,

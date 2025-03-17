@@ -1,6 +1,6 @@
 // src/types/market.ts
 export interface IndexData {
-  code: string;
+  ts_code: string;
   name: string;
   current: number;
   change: number;

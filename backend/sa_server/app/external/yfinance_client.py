@@ -22,9 +22,9 @@ def get_global_indices(period: str = "max") -> List[Dict[str, Any]]:
             # "^IXIC": "纳斯达克综合指数",
             # "^DJI": "道琼斯工业平均指数",
             "^HSI": "恒生指数",
-            "^HSTECH.HK": "恒生科技指数",
-            "^.HSTECH": "恒生科技指数",
-            "^HSTECH.HS": "恒生科技指数",
+            "^HSTECH": "恒生科技指数",
+            # "^.HSTECH": "恒生科技指数",
+            # "^HSTECH.HS": "恒生科技指数",
             # "^FTSE": "富时100指数",
             # "^N225": "日经225指数"
         }
@@ -48,7 +48,7 @@ def get_global_indices(period: str = "max") -> List[Dict[str, Any]]:
                     #     "change": round(float(last_row['Close'] - prev_close), 2),
                     #     "change_pct": round(float((last_row['Close'] - prev_close) / prev_close * 100), 2)
                     # })
-                    result.append(yahoo_finance_data_to_global_index_data(info, code))
+                    result.append(yahoo_finance_data_to_global_index_data(info, code, name))
             except Exception as e:
                 print(f"获取{code}数据错误: {str(e)}")
         

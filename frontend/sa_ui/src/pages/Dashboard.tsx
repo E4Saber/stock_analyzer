@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Card, Typography, Spin, Alert } from 'antd';
 import { getMarketIndices, getMarketHeatmap, getHotStocks } from '../services/marketService';
-import { MarketData, HeatmapData, HotStocksResponse } from '../types/market';
+import { MarketData, HeatmapData,  } from '../types/market';
+import { HotStocksResponse } from '../types/stock';
 import IndexCard from '../components/widgets/IndexCard';
 import IndexChart from '../components/charts/IndexChart';
 import HeatmapChart from '../components/charts/HeatmapChart';
@@ -25,15 +26,17 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       try {
         // 并行获取多个API数据
-        const [marketResponse, heatmapResponse, hotStocksResponse] = await Promise.all([
+        const [marketResponse
+          // , heatmapResponse, hotStocksResponse
+        ] = await Promise.all([
           getMarketIndices(),
-          getMarketHeatmap(),
-          getHotStocks()
+          // getMarketHeatmap(),
+          // getHotStocks()
         ]);
         
         setMarketData(marketResponse);
-        setHeatmapData(heatmapResponse);
-        setHotStocks(hotStocksResponse);
+        // setHeatmapData(heatmapResponse);
+        // setHotStocks(hotStocksResponse);
         setError(null);
       } catch (err) {
         console.error('获取仪表盘数据失败:', err);
@@ -84,7 +87,7 @@ const Dashboard: React.FC = () => {
       {/* 指数卡片区域 */}
       <Row gutter={[16, 16]}>
         {marketData?.cn_indices.map(index => (
-          <Col xs={24} sm={12} md={8} lg={6} key={index.code}>
+          <Col xs={24} sm={12} md={8} lg={6} key={index.ts_code}>
             <IndexCard index={index} />
           </Col>
         ))}
@@ -93,7 +96,7 @@ const Dashboard: React.FC = () => {
       <div style={{ height: '16px' }} />
       
       {/* 增强版图表区域 */}
-      <Row>
+      {/* <Row>
         <Col span={24}>
           <Card title="指数详细走势" bordered={false}>
             {marketData && 
@@ -107,13 +110,13 @@ const Dashboard: React.FC = () => {
             }
           </Card>
         </Col>
-      </Row>
+      </Row> */}
       
       <div style={{ height: '24px' }} />
       
       {/* 全球指数区域 - 使用增强版图表 */}
       <Title level={4}>全球市场</Title>
-      <Row>
+      {/* <Row>
         <Col span={24}>
           {marketData && 
             <EnhancedIndexChart 
@@ -125,18 +128,18 @@ const Dashboard: React.FC = () => {
             />
           }
         </Col>
-      </Row>
+      </Row> */}
       
       <div style={{ height: '24px' }} />
       
       {/* 热门股票列表 */}
-      <Row>
+      {/* <Row>
         <Col span={24}>
           <Card title="热门股票" bordered={false}>
             {hotStocks && <StockTable stocks={hotStocks.hot_stocks} />}
           </Card>
         </Col>
-      </Row>
+      </Row> */}
     </div>
   );
 };

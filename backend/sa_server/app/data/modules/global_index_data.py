@@ -7,6 +7,7 @@ class GlobalIndexData(BaseModel):
   港股指数数据
   """
   ts_code: Optional[str] = None     # TS指数代码
+  name: str                         # 简称
   trade_date: Optional[str] = None  # 交易日
   open: float                       # 开盘价
   high: float                       # 最高价

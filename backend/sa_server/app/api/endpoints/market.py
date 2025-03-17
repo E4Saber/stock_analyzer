@@ -12,6 +12,8 @@ async def get_market_indices() -> Dict[str, Any]:
     获取主要市场指数数据
     返回A股、港股、美股等主要指数的实时数据
     """
+    cn_indices = []
+    global_indices = []
     try:
         # 获取A股指数
         cn_indices = get_index_data()
@@ -27,7 +29,7 @@ async def get_market_indices() -> Dict[str, Any]:
     # 检查是否所有数据获取都失败了
     if not cn_indices and not global_indices:
         raise HTTPException(status_code=500, detail="所有市场数据获取失败")
-
+    
     return {
         "cn_indices": cn_indices,
         "global_indices": global_indices
