@@ -9,9 +9,6 @@ import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
 import Footer from './components/common/Footer';
 import Dashboard from './pages/Dashboard';
-import MarketOverview from './pages/MarketOverview';
-import MarketHotspot from './pages/MarketHotspot';
-import StockDetail from './pages/StockDetail';
 
 // 引入样式
 import './App.css';
@@ -37,9 +34,7 @@ const App: React.FC = () => {
               >
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/market/overview" element={<MarketOverview />} />
-                  <Route path="/market/hotspot" element={<MarketHotspot />} />
-                  <Route path="/stocks/:code" element={<StockDetail />} />
+                  {/* 其他路由将在开发时添加 */}
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </Content>

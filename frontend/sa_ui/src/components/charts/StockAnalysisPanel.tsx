@@ -2,14 +2,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Card, Radio, Spin, Empty, Dropdown, Button, Space, Select,
-  Row, Col, Typography, DatePicker, Tooltip, Divider, Tag
+  Row, Col, Typography, DatePicker, Tooltip, Tag
 } from 'antd';
 import { 
-  LineChartOutlined, BarChartOutlined, CandlestickOutlined,
+  LineChartOutlined, BarChartOutlined, 
   DownOutlined, ReloadOutlined, FullscreenOutlined, 
   PlusOutlined, SettingOutlined
 } from '@ant-design/icons';
-import { getStockKline, getStockIndicators } from '../../services/stockService';
+import { getStockKline, getStockIndicators } from '../../services/mockStockService';
 import MainChartRenderer from './MainChartRenderer';
 import IndicatorChartRenderer from './IndicatorChartRenderer';
 import { 
@@ -20,8 +20,14 @@ import type { RadioChangeEvent } from 'antd';
 import moment from 'moment';
 
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 const { Option } = Select;
+
+// 自定义图表类型图标
+const CandlestickOutlined = () => (
+  <svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor">
+    <path d="M184 352h-48c-4.4 0-8 3.6-8 8v304c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V360c0-4.4-3.6-8-8-8zm736 0h-48c-4.4 0-8 3.6-8 8v304c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V360c0-4.4-3.6-8-8-8zM504.3 620.8l-110 66c-15.4 9.2-35.2-2.4-35.2-20.7V359.9c0-18.3 19.8-29.9 35.2-20.7l110 66c13.9 8.4 13.9 29.2 0 37.6-14 8.4-14 29.2 0 37.6 13.9 8.4 13.9 29.2 0 37.6-14 8.4-14 29.3 0 37.7 13.9 8.4 13.9 29.2 0 37.6-14 8.4-14 29.2 0 37.5z" />
+  </svg>
+);
 
 // 组件属性定义
 interface StockAnalysisPanelProps {
@@ -141,7 +147,7 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
     if (onStockChange) {
       onStockChange(selectedStock);
     }
-  }, [selectedStock, period, chartType, dateRange]);
+  }, [selectedStock, period, chartType, dateRange, compareMode, comparedStocks]);
   
   // 获取技术指标数据
   const fetchIndicatorData = async (stockCode: string, apiPeriod: string) => {
@@ -301,14 +307,6 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
     setIndicatorPanels(updatedPanels);
   };
   
-  // 更改指标类型
-  const handleChangeIndicatorType = (oldType: IndicatorType, newType: IndicatorType) => {
-    const updatedPanels = indicatorPanels.map(panel => 
-      panel.type === oldType ? { ...panel, type: newType } : panel
-    );
-    setIndicatorPanels(updatedPanels);
-  };
-  
   // 调整指标面板高度
   const handleResizeIndicatorPanel = (type: IndicatorType, height: number) => {
     const updatedPanels = indicatorPanels.map(panel => 
@@ -350,6 +348,41 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
     
     // 主图表占用剩余高度，但至少有200px
     return Math.max(baseHeight - controlsHeight - totalIndicatorHeight, 200);
+  };
+
+  // 为Dropdown菜单准备items
+  const getCompareStockItems = () => {
+    return stocks
+      .filter(stock => stock.code !== selectedStock && !comparedStocks.includes(stock.code))
+      .map(stock => ({
+        key: stock.code,
+        label: `${stock.name} (${stock.code})`,
+        onClick: () => handleAddCompareStock(stock.code)
+      }));
+  };
+
+  // 为Dropdown菜单准备indicators items
+  const getIndicatorItems = () => {
+    return availableIndicators
+      .filter(indicator => 
+        !indicatorPanels.some(panel => panel.type === indicator && panel.active)
+      )
+      .map(indicator => ({
+        key: indicator,
+        label: indicator,
+        onClick: () => {
+          const updatedPanels = [...indicatorPanels];
+          const existingPanelIndex = updatedPanels.findIndex(panel => panel.type === indicator);
+          
+          if (existingPanelIndex >= 0) {
+            updatedPanels[existingPanelIndex].active = true;
+          } else {
+            updatedPanels.push({ type: indicator, height: 120, active: true });
+          }
+          
+          setIndicatorPanels(updatedPanels);
+        }
+      }));
   };
 
   return (
@@ -422,14 +455,7 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
               
               <Dropdown 
                 menu={{
-                  items: stocks
-                    .filter(stock => stock.code !== selectedStock && !comparedStocks.includes(stock.code))
-                    .map(stock => ({
-                      key: stock.code,
-                      label: `${stock.name} (${stock.code})`,
-                      onClick: () => handleAddCompareStock(stock.code)
-                    })),
-                  disabled: !compareMode
+                  items: getCompareStockItems(),
                 }}
                 disabled={!compareMode}
               >
@@ -447,26 +473,7 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
               {/* 添加指标按钮 */}
               <Dropdown
                 menu={{
-                  items: availableIndicators
-                    .filter(indicator => 
-                      !indicatorPanels.some(panel => panel.type === indicator && panel.active)
-                    )
-                    .map(indicator => ({
-                      key: indicator,
-                      label: indicator,
-                      onClick: () => {
-                        const updatedPanels = [...indicatorPanels];
-                        const existingPanelIndex = updatedPanels.findIndex(panel => panel.type === indicator);
-                        
-                        if (existingPanelIndex >= 0) {
-                          updatedPanels[existingPanelIndex].active = true;
-                        } else {
-                          updatedPanels.push({ type: indicator, height: 120, active: true });
-                        }
-                        
-                        setIndicatorPanels(updatedPanels);
-                      }
-                    }))
+                  items: getIndicatorItems()
                 }}
               >
                 <Button icon={<PlusOutlined />}>
@@ -485,14 +492,14 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
           {comparedStocks.map(code => {
             const stock = stocks.find(s => s.code === code);
             return (
-              <Tag
+              <StockTag
                 key={code}
                 closable
                 onClose={() => handleRemoveCompareStock(code)}
                 style={{ marginRight: '8px' }}
               >
                 {stock ? `${stock.name} (${stock.code})` : code}
-              </Tag>
+              </StockTag>
             );
           })}
         </div>
@@ -544,6 +551,24 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
         </div>
       )}
     </Card>
+  );
+};
+
+// 自定义Tag组件，包含关闭按钮
+const StockTag: React.FC<{
+  children: React.ReactNode;
+  closable?: boolean;
+  onClose?: () => void;
+  style?: React.CSSProperties;
+}> = ({ children, closable, onClose, style }) => {
+  return (
+    <Tag 
+      closable={closable}
+      onClose={onClose}
+      style={style}
+    >
+      {children}
+    </Tag>
   );
 };
 
