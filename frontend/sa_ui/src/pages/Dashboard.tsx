@@ -1,10 +1,10 @@
 // src/pages/Dashboard.tsx
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Card, Typography, Spin, Alert } from 'antd';
-import { getMarketIndices, getMarketHeatmap, getHotStocks } from '../services/marketService';
-import { MarketData, HeatmapData,  } from '../types/market';
+import { getMinimalMarketIndices, getMarketHeatmap, getHotStocks } from '../services/marketService';
+import { MinimalIndexData, HeatmapData,  } from '../types/market';
 import { HotStocksResponse } from '../types/stock';
-import IndexCard from '../components/widgets/IndexCard';
+import MinimalIndexCard from '../components/widgets/IndexCardMinimal';
 import IndexChart from '../components/charts/IndexChart';
 import HeatmapChart from '../components/charts/HeatmapChart';
 import StockTable from '../components/widgets/StockTable';
@@ -14,7 +14,7 @@ const { Title } = Typography;
 
 const Dashboard: React.FC = () => {
   // 状态管理
-  const [marketData, setMarketData] = useState<MarketData | null>(null);
+  const [minimalMarketData, setMinimalMarketData] = useState<MinimalIndexData[] | null>(null);
   const [heatmapData, setHeatmapData] = useState<HeatmapData | null>(null);
   const [hotStocks, setHotStocks] = useState<HotStocksResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,12 +29,12 @@ const Dashboard: React.FC = () => {
         const [marketResponse
           // , heatmapResponse, hotStocksResponse
         ] = await Promise.all([
-          getMarketIndices(),
+          getMinimalMarketIndices(),
           // getMarketHeatmap(),
           // getHotStocks()
         ]);
         
-        setMarketData(marketResponse);
+        setMinimalMarketData(marketResponse);
         // setHeatmapData(heatmapResponse);
         // setHotStocks(hotStocksResponse);
         setError(null);
@@ -58,7 +58,7 @@ const Dashboard: React.FC = () => {
   }, []);
 
   // 加载状态
-  if (loading && !marketData) {
+  if (loading && !minimalMarketData) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
         <Spin size="large" />
@@ -86,9 +86,9 @@ const Dashboard: React.FC = () => {
       
       {/* 指数卡片区域 */}
       <Row gutter={[16, 16]}>
-        {marketData?.cn_indices.map(index => (
+        {minimalMarketData?.map(index => (
           <Col xs={24} sm={12} md={8} lg={6} key={index.ts_code}>
-            <IndexCard index={index} />
+            <MinimalIndexCard index={index} />
           </Col>
         ))}
       </Row>

@@ -1,16 +1,16 @@
 // src/services/marketService.ts
 import api from './api';
-import { MarketData, HeatmapData } from '../types/market';
+import { MinimalMarketData, HeatmapData } from '../types/market';
 import { HotStocksResponse } from '../types/stock';
 
 /**
- * 获取市场指数数据
+ * 获取市场指数数据（极简）
  * 返回A股、港股、美股主要指数的实时数据
  */
-export const getMarketIndices = async (): Promise<MarketData> => {
+export const getMinimalMarketIndices = async (): Promise<MinimalMarketData> => {
   try {
-    const response = await api.get<MarketData>('/market/indices');
-    return response.data as MarketData;
+    const response = await api.get<MinimalMarketData>('/market/minimal_indices');
+    return response.data as MinimalMarketData;
   } catch (error) {
     console.error('获取市场指数数据失败:', error);
     throw error;

@@ -1,14 +1,14 @@
-// src/components/widgets/IndexCard.tsx
+// src/components/widgets/IndexCardMinimal.tsx
 import React from 'react';
 import { Card, Statistic } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
-import { IndexData } from '../../types/market';
+import { MinimalIndexData } from '../../types/market';
 
-interface IndexCardProps {
-  index: IndexData;
+interface MinimalIndexCardProps {
+  index: MinimalIndexData;
 }
 
-const IndexCard: React.FC<IndexCardProps> = ({ index }) => {
+const MinimalIndexCard: React.FC<MinimalIndexCardProps> = ({ index }) => {
   const { name, current, change, change_pct } = index;
   
   // 判断涨跌
@@ -47,4 +47,4 @@ const IndexCard: React.FC<IndexCardProps> = ({ index }) => {
   );
 };
 
-export default IndexCard;
+export default MinimalIndexCard;

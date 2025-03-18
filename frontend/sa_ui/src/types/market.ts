@@ -1,10 +1,10 @@
 // src/types/market.ts
-export interface IndexData {
+export interface MinimalIndexData {
   ts_code: string;
   name: string;
   current: number;
   change: number;
-  change_pct: number;
+  pct_chg: number;
 }
 
 export interface SectorData {
@@ -13,10 +13,10 @@ export interface SectorData {
   avg_volume: number;
 }
 
-export interface MarketData {
-  cn_indices: IndexData[];
-  global_indices: IndexData[];
-}
+// export interface MinimalMarketData {
+//   cn_indices: MinimalIndexData[];
+//   global_indices: MinimalIndexData[];
+// }
 
 export interface HeatmapData {
   sectors: SectorData[];
