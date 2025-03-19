@@ -2,13 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Row, Col, Card, Typography, Spin, Alert, List, Tag, Space, 
-  Table, Divider, Tabs, Timeline, Button, Tooltip
+  Table, Divider, Tabs, Timeline, Button, Tooltip, Statistic
 } from 'antd';
 import { 
   FireOutlined, RiseOutlined, FallOutlined, BarChartOutlined, 
   FileTextOutlined, LinkOutlined, AppstoreOutlined, RightOutlined
 } from '@ant-design/icons';
-import { getMarketHotspots } from '../services/mockMarketService';
+import { getMarketHotspots } from '../services/mock/mockMarketService';
 import { HotStock } from '../types/market';
 import { formatLargeNumber } from '../utils/numberFormatter';
 

@@ -1,46 +1,112 @@
 // src/services/marketService.ts
-import api from './api';
-import { MinimalMarketData, HeatmapData } from '../types/market';
-import { HotStocksResponse } from '../types/stock';
+import api, { USE_MOCK } from './api';
+import { IndexData, SectorData, HotStock, MarketStats, MarketTrend, MarketNews } from '../types/market';
+
+// Import mock services if in mock mode
+import * as mockMarketService from './mock/mockMarketService';
 
 /**
- * 获取市场指数数据（极简）
- * 返回A股、港股、美股主要指数的实时数据
+ * Get minimal market indices data
+ * Returns real-time data for major indices from China, Hong Kong, and US markets
  */
-export const getMinimalMarketIndices = async (): Promise<MinimalMarketData> => {
+export const getMinimalMarketIndices = async (): Promise<IndexData[]> => {
+  if (USE_MOCK) {
+    return mockMarketService.getMinimalMarketIndices();
+  }
+  
   try {
-    const response = await api.get<MinimalMarketData>('/market/minimal_indices');
-    return response.data as MinimalMarketData;
+    const response = await api.get<{data: IndexData[]}>('/market/minimal_indices');
+    return response.data;
   } catch (error) {
-    console.error('获取市场指数数据失败:', error);
+    console.error('Failed to get market indices data:', error);
     throw error;
   }
 };
 
 /**
- * 获取市场热力图数据
- * 返回行业板块涨跌情况
+ * Get market heatmap data
+ * Returns sector/industry performance data
  */
-export const getMarketHeatmap = async (): Promise<HeatmapData> => {
+export const getMarketHeatmap = async (): Promise<{sectors: SectorData[]}> => {
+  if (USE_MOCK) {
+    return mockMarketService.getMarketHeatmap();
+  }
+  
   try {
-    const response = await api.get<HeatmapData>('/market/heatmap');
-    return response.data as HeatmapData;
+    const response = await api.get<{sectors: SectorData[]}>('/market/heatmap');
+    return response;
   } catch (error) {
-    console.error('获取市场热力图数据失败:', error);
+    console.error('Failed to get market heatmap data:', error);
     throw error;
   }
 };
 
 /**
- * 获取热门股票列表
- * 返回当日交易活跃或关注度高的股票
+ * Get hot stocks list
+ * Returns the most active or popular stocks of the day
  */
-export const getHotStocks = async (): Promise<HotStocksResponse> => {
+export const getHotStocks = async (): Promise<{hot_stocks: HotStock[]}> => {
+  if (USE_MOCK) {
+    return mockMarketService.getHotStocks();
+  }
+  
   try {
-    const response = await api.get<HotStocksResponse>('/stocks/hot');
-    return response as HotStocksResponse;
+    const response = await api.get<{hot_stocks: HotStock[]}>('/stocks/hot');
+    return response;
   } catch (error) {
-    console.error('获取热门股票数据失败:', error);
+    console.error('Failed to get hot stocks data:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get market overview data
+ * Returns comprehensive market data including indices, sectors, hot stocks, and market statistics
+ */
+export const getMarketOverview = async (): Promise<{
+  indices: IndexData[],
+  sectors: SectorData[],
+  hotStocks: HotStock[],
+  marketStats: MarketStats
+}> => {
+  if (USE_MOCK) {
+    return mockMarketService.getMarketOverview();
+  }
+  
+  try {
+    const response = await api.get<{
+      indices: IndexData[],
+      sectors: SectorData[],
+      hotStocks: HotStock[],
+      marketStats: MarketStats
+    }>('/market/overview');
+    return response;
+  } catch (error) {
+    console.error('Failed to get market overview data:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get market hotspots data
+ * Returns trending sectors/themes and related news
+ */
+export const getMarketHotspots = async (): Promise<{
+  trends: MarketTrend[],
+  news: MarketNews[]
+}> => {
+  if (USE_MOCK) {
+    return mockMarketService.getMarketHotspots();
+  }
+  
+  try {
+    const response = await api.get<{
+      trends: MarketTrend[],
+      news: MarketNews[]
+    }>('/market/hotspots');
+    return response;
+  } catch (error) {
+    console.error('Failed to get market hotspots data:', error);
     throw error;
   }
 };

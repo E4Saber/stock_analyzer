@@ -1,104 +1,127 @@
 // src/types/market.ts
 
 /**
- * 指数数据接口
+ * Stock data interface
+ */
+export interface StockData {
+  code: string;           // Stock code
+  name: string;           // Stock name
+  current: number;        // Current price
+  change: number;         // Price change
+  change_percent: number; // Price change percentage
+  open?: number;          // Opening price
+  high?: number;          // Highest price
+  low?: number;           // Lowest price
+  volume?: number;        // Trading volume
+  amount?: number;        // Trading amount
+  market_cap?: number;    // Market capitalization
+  pe?: number;            // Price-to-earnings ratio
+  pb?: number;            // Price-to-book ratio
+  industry?: string;      // Industry classification
+  turnover_rate?: number; // Turnover rate
+  dividend?: number;      // Dividend yield
+  update_time?: string;   // Update time
+}
+
+/**
+ * Index data interface
  */
 export interface IndexData {
-  code: string;           // 指数代码
-  name: string;           // 指数名称
-  current: number;        // 当前点位
-  change: number;         // 涨跌点数
-  change_pct: number;     // 涨跌幅
-  ts_code?: string;       // 特殊代码 (兼容tushare)
+  code: string;           // Index code
+  name: string;           // Index name
+  current: number;        // Current level
+  change: number;         // Change in points
+  change_pct: number;     // Change percentage
+  ts_code?: string;       // Special code (compatible with tushare)
 }
 
 /**
- * 行业板块数据接口
+ * Sector data interface
  */
 export interface SectorData {
-  name: string;           // 板块名称
-  change_pct: number;     // 涨跌幅
-  avg_volume: number;     // 平均成交量
+  name: string;           // Sector name
+  change_pct: number;     // Change percentage
+  avg_volume: number;     // Average volume
 }
 
 /**
- * 热门股票接口
+ * Hot stock interface
  */
 export interface HotStock {
-  code: string;           // 股票代码
-  name: string;           // 股票名称
-  price: number;          // 价格
-  change_pct: number;     // 涨跌幅
-  volume: number;         // 成交量
-  amount: number;         // 成交额
-  turnover_rate: number;  // 换手率
+  code: string;           // Stock code
+  name: string;           // Stock name
+  price: number;          // Price
+  change_pct: number;     // Change percentage
+  volume?: number;        // Volume
+  amount?: number;        // Amount
+  turnover_rate?: number; // Turnover rate
 }
 
 /**
- * 市场统计数据
+ * Market statistics
  */
 export interface MarketStats {
-  totalStocks: number;     // 总股票数
-  upStocks: number;        // 上涨股票数
-  downStocks: number;      // 下跌股票数
-  limitUpStocks: number;   // 涨停股票数
-  limitDownStocks: number; // 跌停股票数
-  totalVolume: number;     // 总成交量
-  totalAmount: number;     // 总成交额
+  totalStocks: number;     // Total number of stocks
+  upStocks: number;        // Number of stocks up
+  downStocks: number;      // Number of stocks down
+  limitUpStocks: number;   // Number of stocks limit up
+  limitDownStocks: number; // Number of stocks limit down
+  totalVolume: number;     // Total volume
+  totalAmount: number;     // Total amount
 }
 
 /**
- * 市场热点趋势
+ * Market trend
  */
 export interface MarketTrend {
-  category: string;       // 板块类别
-  stocks: HotStock[];     // 代表股票
-  desc: string;           // 描述
+  category: string;       // Category
+  stocks: HotStock[];     // Representative stocks
+  desc: string;           // Description
 }
 
 /**
- * 市场新闻
+ * Market news
  */
 export interface MarketNews {
-  id: string;             // 新闻ID
-  title: string;          // 标题
-  source: string;         // 来源
-  time: string;           // 时间
-  url: string;            // 链接
+  id: string;             // News ID
+  title: string;          // News title
+  source: string;         // News source
+  time: string;           // News time
+  url: string;            // News URL
 }
 
 /**
- * 股票持股数据
+ * Shareholder data
  */
 export interface ShareholderData {
-  name: string;           // 股东名称
-  shares: number;         // 持股数量
-  ratio: number;          // 持股比例
-  change: number;         // 变动数量
-  type: 'institution' | 'individual' | 'government'; // 股东类型
+  name: string;           // Shareholder name
+  shares: number;         // Number of shares
+  ratio: number;          // Shareholding ratio
+  change: number;         // Change in shares
+  type: 'institution' | 'individual' | 'government'; // Shareholder type
 }
 
 /**
- * 公司财务指标
+ * Financial indicator
  */
 export interface FinancialIndicator {
-  year: string;           // 年份
-  quarter: string;        // 季度
-  revenue: number;        // 营收
-  netProfit: number;      // 净利润
-  grossMargin: number;    // 毛利率
-  netMargin: number;      // 净利率
-  roe: number;            // 净资产收益率
-  eps: number;            // 每股收益
-  debt_to_assets: number; // 资产负债率
+  year: string;           // Year
+  quarter: string;        // Quarter
+  revenue: number;        // Revenue
+  netProfit: number;      // Net profit
+  grossMargin: number;    // Gross margin
+  netMargin: number;      // Net margin
+  roe: number;            // Return on equity
+  eps: number;            // Earnings per share
+  debt_to_assets: number; // Debt to assets ratio
 }
 
 /**
- * 分时数据点
+ * Time series data point
  */
 export interface TimeSeriesDataPoint {
-  time: string;           // 时间
-  price: number;          // 价格
-  volume: number;         // 成交量
-  avg_price: number;      // 均价
+  time: string;           // Time
+  price: number;          // Price
+  volume: number;         // Volume
+  avg_price?: number;     // Average price
 }

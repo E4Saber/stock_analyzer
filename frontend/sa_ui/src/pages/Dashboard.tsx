@@ -5,12 +5,12 @@ import {
   RiseOutlined, FallOutlined, DashboardOutlined, 
   FireOutlined, LineChartOutlined
 } from '@ant-design/icons';
-import { getMinimalMarketIndices, getMarketHeatmap, getHotStocks } from '../services/mockMarketService';
+import { getMinimalMarketIndices, getMarketHeatmap, getHotStocks } from '../services/mock/mockMarketService';
 import { IndexData, SectorData, HotStock } from '../types/market';
-import MinimalIndexCard from '../components/widgets/MinimalIndexCard';
+import IndexCard from '../components/widgets/IndexCard';
 import HeatmapChart from '../components/charts/HeatmapChart';
 import StockTable from '../components/widgets/StockTable';
-import EnhancedIndexChart from '../components/charts/EnhancedIndexChart';
+import EnhancedIndexChart from '../components/charts/IndexChart';
 
 const { Title } = Typography;
 const { TabPane } = Tabs;
@@ -93,7 +93,7 @@ const Dashboard: React.FC = () => {
       <Row gutter={[16, 16]} className="market-indices-section">
         {marketIndices.map(index => (
           <Col xs={24} sm={12} md={8} lg={6} key={index.code}>
-            <MinimalIndexCard index={index} />
+            <IndexCard index={index} />
           </Col>
         ))}
       </Row>

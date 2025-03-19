@@ -1,0 +1,219 @@
+/* src/components/widgets/AIAssistantFloat.css */
+
+/* 悬浮窗样式 */
+.ai-assistant-float {
+  position: fixed;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  overflow: hidden;
+  transition: box-shadow 0.3s;
+  border: 1px solid #f0f0f0;
+}
+
+.ai-assistant-float:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* 最小化状态 */
+.ai-assistant-minimized {
+  position: fixed;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+/* 悬浮窗头部 */
+.ai-assistant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #1890ff;
+  color: white;
+  cursor: move;
+  user-select: none;
+}
+
+.ai-assistant-title {
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.ai-assistant-controls button {
+  color: white;
+  border: none;
+}
+
+.ai-assistant-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 当前股票信息 */
+.ai-assistant-stock-info {
+  padding: 8px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 内容区域 */
+.ai-assistant-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 输入框样式 */
+.ai-assistant-input {
+  margin-bottom: 12px;
+  border-radius: 6px;
+}
+
+/* 预设问题列表 */
+.ai-assistant-preset-questions {
+  margin-bottom: 16px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.preset-question-item {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.preset-question-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* 设置选项 */
+.ai-assistant-options {
+  margin-bottom: 16px;
+}
+
+.option-row {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.dimensions {
+  margin-top: 8px;
+}
+
+.dimension-tag {
+  cursor: pointer;
+  user-select: none;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  transition: all 0.3s;
+}
+
+.dimension-tag:hover {
+  opacity: 0.8;
+}
+
+/* 操作按钮 */
+.ai-assistant-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+/* 分析结果区域 */
+.ai-assistant-result {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.result-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.analysis-section {
+  margin-bottom: 12px;
+}
+
+.section-content {
+  padding-left: 8px;
+}
+
+.analysis-summary {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  border-left: 4px solid #1890ff;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* 调整大小的手柄 */
+.resize-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  bottom: 0;
+  right: 0;
+  cursor: nwse-resize;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 50%,
+    #d9d9d9 50%,
+    #d9d9d9 100%
+  );
+}
+
+/* 滚动条样式 */
+.ai-assistant-content::-webkit-scrollbar,
+.result-content::-webkit-scrollbar,
+.ai-assistant-preset-questions::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.ai-assistant-content::-webkit-scrollbar-thumb,
+.result-content::-webkit-scrollbar-thumb,
+.ai-assistant-preset-questions::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 3px;
+}
+
+.ai-assistant-content::-webkit-scrollbar-thumb:hover,
+.result-content::-webkit-scrollbar-thumb:hover,
+.ai-assistant-preset-questions::-webkit-scrollbar-thumb:hover {
+  background: #bfbfbf;
+}
+
+/* 响应式调整 */
+@media (max-width: 576px) {
+  .ai-assistant-float {
+    width: 90vw !important;
+    height: 80vh !important;
+    top: 10vh !important;
+    left: 5vw !important;
+  }
+}

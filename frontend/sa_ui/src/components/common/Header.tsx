@@ -1,6 +1,6 @@
 // src/components/common/Header.tsx
 import React from 'react';
-import { Layout, Menu, Input, Space, Button, Typography } from 'antd';
+import { Layout, Input, Space, Button, Typography } from 'antd';
 import { SearchOutlined, BellOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 
@@ -42,4 +42,3 @@ const Header: React.FC = () => {
 };
 
 export default Header;
-

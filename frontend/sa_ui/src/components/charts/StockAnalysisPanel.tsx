@@ -9,7 +9,7 @@ import {
   DownOutlined, ReloadOutlined, FullscreenOutlined, 
   PlusOutlined, SettingOutlined
 } from '@ant-design/icons';
-import { getStockKline, getStockIndicators } from '../../services/mockStockService';
+import { getStockKline, getStockIndicators } from '../../services/mock/mockStockService';
 import MainChartRenderer from './MainChartRenderer';
 import IndicatorChartRenderer from './IndicatorChartRenderer';
 import { 

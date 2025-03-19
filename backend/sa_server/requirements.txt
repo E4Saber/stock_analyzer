@@ -6,3 +6,7 @@ tushare>=1.2.89
 yfinance>=0.2.33
 pandas>=2.1.4
 python-dotenv>=1.0.0
+apscheduler>=3.10.1
+loguru>=0.7.0
+databases>=0.8.0
+asyncpg>=0.29.0

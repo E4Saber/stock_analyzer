@@ -1,35 +1,35 @@
 // src/components/charts/config/chartConfig.ts
 import { StockData as MarketStockData } from '../../../types/market';
 
-// 重新导出StockData类型，保持一致性
+// Re-export StockData type for consistency
 export type StockData = MarketStockData;
 
 /**
- * 图表类型
+ * Chart type
  */
 export type ChartType = 'line' | 'candle' | 'bar';
 
 /**
- * 周期类型
+ * Period type
  */
 export type PeriodType = '1m' | '5m' | '15m' | '30m' | '60m' | 'day' | 'week' | 'month' | 'year';
 
 /**
- * 指标类型
+ * Indicator type
  */
 export type IndicatorType = 'MA' | 'MACD' | 'KDJ' | 'RSI' | 'VOL' | 'BOLL';
 
 /**
- * 指标面板配置
+ * Indicator panel configuration
  */
 export interface IndicatorPanelConfig {
-  type: IndicatorType;   // 指标类型
-  height: number;        // 面板高度
-  active: boolean;       // 是否激活
+  type: IndicatorType;   // Indicator type
+  height: number;        // Panel height
+  active: boolean;       // Whether active
 }
 
 /**
- * 周期映射表
+ * Period mapping table
  */
 export const periodMap: Record<PeriodType, string> = {
   '1m': '1m',
@@ -44,8 +44,8 @@ export const periodMap: Record<PeriodType, string> = {
 };
 
 /**
- * 获取指标标题
- * @param type 指标类型
+ * Get indicator title
+ * @param type Indicator type
  */
 export function getIndicatorTitle(type: IndicatorType): string {
   switch (type) {
@@ -67,8 +67,8 @@ export function getIndicatorTitle(type: IndicatorType): string {
 }
 
 /**
- * 获取指标颜色配置
- * @param type 指标类型
+ * Get indicator color configuration
+ * @param type Indicator type
  */
 export function getIndicatorColors(type: IndicatorType): Record<string, string> {
   switch (type) {
@@ -117,14 +117,14 @@ export function getIndicatorColors(type: IndicatorType): Record<string, string> 
 }
 
 /**
- * 获取可用的指标类型列表
+ * Get available indicator types
  */
 export function getAvailableIndicators(): IndicatorType[] {
   return ['MA', 'MACD', 'KDJ', 'RSI', 'VOL', 'BOLL'];
 }
 
 /**
- * 获取默认指标面板配置
+ * Get default indicator panel configuration
  */
 export function getDefaultIndicatorPanels(): IndicatorPanelConfig[] {
   return [
@@ -132,7 +132,7 @@ export function getDefaultIndicatorPanels(): IndicatorPanelConfig[] {
     { type: 'KDJ', height: 120, active: false },
     { type: 'RSI', height: 120, active: false },
     { type: 'VOL', height: 120, active: true },
-    { type: 'MA', height: 0, active: true }, // MA 通常显示在主图上
-    { type: 'BOLL', height: 0, active: false } // BOLL 通常显示在主图上
+    { type: 'MA', height: 0, active: true },    // MA usually displayed on main chart
+    { type: 'BOLL', height: 0, active: false }  // BOLL usually displayed on main chart
   ];
 }

@@ -4,7 +4,7 @@ from typing import Optional
 
 class GlobalIndexData(BaseModel):
   """
-  港股指数数据
+  全球指数数据
   """
   ts_code: Optional[str] = None     # TS指数代码
   name: str                         # 简称

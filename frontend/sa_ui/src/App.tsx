@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Layout, ConfigProvider } from 'antd';
 import zhCN from 'antd/lib/locale/zh_CN';
 
-// 引入组件
+// Import components
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
 import Footer from './components/common/Footer';
@@ -12,8 +12,9 @@ import Dashboard from './pages/Dashboard';
 import MarketOverview from './pages/MarketOverview';
 import MarketHotspot from './pages/MarketHotspot';
 import StockDetail from './pages/StockDetail';
+import StockDetailWithAI from './pages/StockDetailWithAI'; // 新添加的AI版本股票详情页
 
-// 引入样式
+// Import styles
 import './App.css';
 
 const { Content } = Layout;
@@ -40,6 +41,7 @@ const App: React.FC = () => {
                   <Route path="/market/overview" element={<MarketOverview />} />
                   <Route path="/market/hotspot" element={<MarketHotspot />} />
                   <Route path="/stocks/:code" element={<StockDetail />} />
+                  <Route path="/stocks-ai/:code" element={<StockDetailWithAI />} /> {/* 新添加的AI路由 */}
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </Content>

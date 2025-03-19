@@ -1,46 +1,24 @@
 // src/types/stock.ts
-export interface StockBasic {
-  code: string;
-  name: string;
-  current: number;
-  change: number;
-  change_pct: number;
-  open: number;
-  high: number;
-  low: number;
-  volume: number;
-  amount?: number;
-  market_cap?: number;
-  industry?: string;
-  area?: string;
-  list_date?: string;
-  sector?: string;
-  currency?: string;
-}
 
+/**
+ * K-line data point
+ */
 export interface KLineData {
-  date: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
+  date: string;     // Date
+  open: number;     // Opening price
+  high: number;     // Highest price
+  low: number;      // Lowest price
+  close: number;    // Closing price
+  volume: number;   // Volume
+  amount?: number;  // Amount
 }
 
+/**
+ * K-line response structure
+ */
 export interface StockKLine {
-  code: string;
-  period: string;
-  type: string;
-  data: KLineData[];
-}
-
-export interface HotStock {
-  code: string;
-  name: string;
-  price: number;
-  change_pct: number;
-}
-
-export interface HotStocksResponse {
-  hot_stocks: HotStock[];
+  code: string;      // Stock code
+  period: string;    // Period, e.g., '1d', '1wk'
+  type: string;      // Chart type, e.g., 'line', 'candle'
+  data: KLineData[]; // K-line data array
 }

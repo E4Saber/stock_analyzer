@@ -12,7 +12,7 @@ import {
   DollarOutlined, TeamOutlined, FileSearchOutlined,
   RiseOutlined, FallOutlined, FireOutlined
 } from '@ant-design/icons';
-import { getStockDetail, getStockFinancial } from '../services/mockStockService';
+import { getStockDetail, getStockFinancial } from '../services/mock/mockStockService';
 import StockAnalysisPanel from '../components/charts/StockAnalysisPanel';
 import { StockData } from '../components/charts/config/chartConfig';
 import { ShareholderData, FinancialIndicator, MarketNews } from '../types/market';

@@ -20,7 +20,7 @@ const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   
-  // 根据当前路径确定选中的菜单项
+  // Determine selected menu item based on current path
   const getSelectedKey = () => {
     const path = location.pathname;
     if (path.startsWith('/dashboard')) return ['dashboard'];
@@ -32,7 +32,7 @@ const Sidebar: React.FC = () => {
     return ['dashboard'];
   };
 
-  // 使用 items 属性来定义菜单项
+  // Define menu items using the items property
   const items: MenuItem[] = [
     {
       key: 'dashboard',

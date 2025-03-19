@@ -1,19 +1,18 @@
 // src/services/api.ts
 import axios from 'axios';
 
-// 创建axios实例
+// Create axios instance
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
-  // timeout: 100000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// 请求拦截器
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // 可以在这里添加认证token等
+    // You can add authentication tokens here
     return config;
   },
   (error) => {
@@ -21,7 +20,7 @@ api.interceptors.request.use(
   }
 );
 
-// 响应拦截器
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
     return response.data;
@@ -29,28 +28,28 @@ api.interceptors.response.use(
   (error) => {
     const { response } = error;
     
-    // 错误处理
+    // Error handling
     if (response) {
-      // 服务器返回了错误响应
+      // Server returned an error response
       console.error('API Error:', response.status, response.data);
       
-      // 根据状态码处理特定错误
+      // Handle specific error codes
       switch (response.status) {
         case 401:
-          // 未授权处理
+          // Unauthorized handling
           break;
         case 404:
-          // 资源不存在处理
+          // Resource not found handling
           break;
         case 500:
-          // 服务器错误处理
+          // Server error handling
           break;
         default:
-          // 其他错误处理
+          // Other error handling
           break;
       }
     } else {
-      // 网络错误或请求被取消
+      // Network error or request canceled
       console.error('Network Error:', error.message);
     }
     
@@ -58,4 +57,8 @@ api.interceptors.response.use(
   }
 );
 
+// Enable mock mode for development
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' || true;
+
+export { USE_MOCK };
 export default api;

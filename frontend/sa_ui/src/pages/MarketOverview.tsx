@@ -7,7 +7,7 @@ import {
   RiseOutlined, FallOutlined, LineChartOutlined, PieChartOutlined, 
   BarChartOutlined, AreaChartOutlined, FireOutlined
 } from '@ant-design/icons';
-import { getMarketOverview } from '../services/mockMarketService';
+import { getMarketOverview } from '../services/mock/mockMarketService';
 import { IndexData, SectorData, HotStock, MarketStats } from '../types/market';
 import HeatmapChart from '../components/charts/HeatmapChart';
 import EnhancedIndexChart from '../components/charts/EnhancedIndexChart';
