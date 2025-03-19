@@ -1,7 +1,10 @@
 import pandas as pd
-from typing import List, Type
+from typing import List, Type, Dict, Any
 from pydantic import TypeAdapter
 from app.data.modules.global_index_data import GlobalIndexData
+from app.config.indices_config import GLOBAL_INDICES
+from app.services.yfinance_services import get_minimal_global_indices_tday
+
 
 def ensure_serializable(data):
     """确保数据可以被序列化为JSON"""
@@ -23,7 +26,7 @@ def ensure_serializable(data):
     else:
         return data
 
-def dataframe_to_cn_model_instances(df: pd.DataFrame, model: Type) -> List:
+def tushare_data_to_cn_index_data(df: pd.DataFrame, model: Type) -> List:
     """将DataFrame转换为模型实例列表"""
     # 先将NaN转为None，确保JSON兼容
     df_copy = df.where(pd.notna(df), None)
@@ -48,18 +51,30 @@ def dataframe_to_cn_model_instances(df: pd.DataFrame, model: Type) -> List:
 def yahoo_finance_data_to_global_index_data(
     info: pd.DataFrame,
     code: str,
-    name: str
+    name: str = None
 ) -> List[GlobalIndexData]:
     """
-    将Yahoo Finance的数据转换为GlobalIndexData实例列表
+    将Yahoo Finance的DataFrame数据转换为单个GlobalIndexData实例
+    只返回最新的一条记录(第二条)，但使用前一条记录(第一条)的收盘价作为pre_close
     
     Args:
-        code: Yahoo Finance的股票/指数代码
         info: 通过yf.Ticker(code).history()获取的DataFrame
+        code: Yahoo Finance的股票/指数代码
+        name: 指数名称
         
     Returns:
-        List[GlobalIndexData]: 模型实例列表
+        List[GlobalIndexData]: 包含单个模型实例的列表
     """
+    # 输入检查
+    if not isinstance(info, pd.DataFrame):
+        print(f"警告: 输入不是有效的DataFrame")
+        return []
+    
+    # 检查DataFrame是否至少有两行
+    if len(info) < 2:
+        print(f"警告: DataFrame记录数不足，至少需要两条记录")
+        return []
+        
     # 复制DataFrame避免修改原始数据
     df = info.copy()
     
@@ -80,60 +95,97 @@ def yahoo_finance_data_to_global_index_data(
     # 格式化日期为字符串 (YYYYMMDD 格式)
     df['trade_date'] = df['trade_date'].dt.strftime('%Y%m%d')
     
-    # 添加ts_code列
-    df['ts_code'] = code
-
-    # 添加name列
-    df['name'] = name
+    # 只保留最后一行（最新数据）
+    latest_record = df.iloc[-1].copy()
     
-    # 计算前收盘价 (pre_close) - 使用前一天的收盘价
-    df['pre_close'] = df['close'].shift(1)
+    # 获取前一条记录的收盘价
+    if len(df) >= 2:
+        previous_close = df.iloc[-2]['close']
+    else:
+        previous_close = None
     
-    # 处理所有NaN值，替换为None
-    df = df.where(pd.notna(df), None)
-
-    # 计算剩余可选字段
-    def transform_and_fill(record):
-        # 计算涨跌点 (change)
-        if 'change' not in record or record['change'] is None:
-            if 'close' in record and 'pre_close' in record and pd.notna(record['pre_close']):
-                record['change'] = record['close'] - record['pre_close']
-        
-        # 计算涨跌幅 (pct_chg)
-        if 'pct_chg' not in record or record['pct_chg'] is None:
-            if 'close' in record and 'pre_close' in record and pd.notna(record['pre_close']) and record['pre_close'] != 0:
-                record['pct_chg'] = (record['close'] - record['pre_close']) / record['pre_close'] * 100
-        
-        # 处理成交量，Yahoo Finance返回的通常是股数
-        if 'vol' not in record or record['vol'] is None:
-            if 'volume' in record and pd.notna(record['volume']):
-                # 假设vol是以手为单位，一手=100股
-                record['vol'] = record['volume'] / 100
-        
-        # 计算成交额 (amount)
-        if 'amount' not in record:
-            if 'volume' in record and 'close' in record and pd.notna(record['volume']) and pd.notna(record['close']):
-                # 使用当日均价估算
-                avg_price = (record['open'] + record['high'] + record['low'] + record['close']) / 4
-                record['amount'] = record['volume'] * avg_price
-        
-        return record
+    # 构建单条记录的字典
+    record = latest_record.to_dict()
     
-    # 转换每条记录
-    records = df.to_dict('records')
-    processed_records = [transform_and_fill(record) for record in records]
+    # 添加ts_code和name
+    record['ts_code'] = code
+    record['name'] = name
     
-    # 最终确保所有记录中没有NaN值
-    for record in processed_records:
-        for key, value in list(record.items()):
-            if pd.isna(value):
-                record[key] = None
-
+    # 使用前一条记录的收盘价作为pre_close
+    record['pre_close'] = previous_close
+    
+    # 计算其他字段
+    # 计算涨跌点 (change)
+    if ('close' in record and pd.notna(record['close']) and 
+        'pre_close' in record and pd.notna(record['pre_close'])):
+        record['change'] = record['close'] - record['pre_close']
+    else:
+        record['change'] = None
+    
+    # 计算涨跌幅 (pct_chg)
+    if ('close' in record and pd.notna(record['close']) and 
+        'pre_close' in record and pd.notna(record['pre_close']) and record['pre_close'] != 0):
+        record['pct_chg'] = (record['close'] - record['pre_close']) / record['pre_close'] * 100
+    else:
+        record['pct_chg'] = None
+    
+    # 处理成交量，Yahoo Finance返回的通常是股数
+    if 'volume' in record and pd.notna(record['volume']):
+        # 假设vol是以手为单位，一手=100股
+        record['vol'] = record['volume'] / 100
+    else:
+        record['vol'] = None
+    
+    # 计算成交额 (amount)
+    if ('volume' in record and pd.notna(record['volume']) and 
+        all(pd.notna(record.get(k, None)) for k in ['open', 'high', 'low', 'close'])):
+        # 使用当日均价估算
+        avg_price = (record['open'] + record['high'] + record['low'] + record['close']) / 4
+        record['amount'] = record['volume'] * avg_price
+    else:
+        record['amount'] = None
+    
+    # 确保所有字段中没有NaN值
+    for key, value in list(record.items()):
+        if pd.isna(value):
+            record[key] = None
+    
     # 使用TypeAdapter转换为模型实例
-    from pydantic import TypeAdapter
-    from typing import List
-    
     ta = TypeAdapter(List[GlobalIndexData])
-    model_instances = ta.validate_python(processed_records)
+    model_instances = ta.validate_python([record])
     
     return model_instances
+
+def get_minimal_global_indices(indices_data: List[Dict[str, Any]]) -> List[GlobalIndexData]:
+    """
+    获取全球指数数据
+    返回一个包含GlobalIndexData模型实例的列表
+    """
+    global_indices_data = []
+    
+    # 遍历数据列表
+    for record in indices_data:
+        # 检查记录结构
+        if isinstance(record, dict) and "code" in record and "name" in record and "global_index_data" in record:
+            code = record["code"]
+            name = record["name"]
+            global_index_data = record["global_index_data"]
+            
+            # 确保global_index_data是DataFrame
+            if isinstance(global_index_data, pd.DataFrame):
+                # 调用函数处理数据
+                try:
+                    rs = yahoo_finance_data_to_global_index_data(global_index_data, code, name)
+                    global_indices_data.extend(rs)
+                except Exception as e:
+                    print(f"处理时出错: {e}")
+            else:
+                print(f"警告: {code} 的global_index_data不是DataFrame，而是 {type(global_index_data)}")
+        else:
+            print(f"警告: 记录格式不正确: {record}")
+    
+    return global_indices_data
+
+if __name__ == "__main__":
+    data = get_minimal_global_indices()
+    print(f"处理成功，结果: {data}")

@@ -20,7 +20,7 @@ class CNIndexBaseData(BaseModel):
   exp_date: Optional[str] = None    # 终止日期（可选字段）
 
   class Config:
-    orm_mode = True
+    from_attributes = True
 
 class CNIndexData(BaseModel):
   """
@@ -39,4 +39,4 @@ class CNIndexData(BaseModel):
   amount: float                     # 成交额（千元）
 
   class Config:
-    orm_mode = True
+    from_attributes = True

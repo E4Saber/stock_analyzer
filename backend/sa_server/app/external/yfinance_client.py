@@ -3,52 +3,74 @@ import yfinance as yf
 import pandas as pd
 from typing import Dict, List, Any, Optional
 import datetime
-from app.utils.data_formater import ensure_serializable
 from app.data.modules.global_index_data import GlobalIndexData
-from app.utils.data_formater import yahoo_finance_data_to_global_index_data
 
-def get_global_indices(period: str = "max") -> List[Dict[str, Any]]:
+def get_global_indices(index_codes: List, period="1d", interval="1d",
+                start=None, end=None, prepost=False, actions=True,
+                auto_adjust=True, back_adjust=False, repair=False, keepna=False,
+                proxy=None, rounding=False, timeout=10,
+                raise_errors=False) -> List[Dict[str, Any]]:
     """
     获取全球主要指数数据
     包括美股、港股主要指数
 
     Args:
-        period可选: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max, 默认为max
+
+        | 参数 | 类型 | 默认值 | 说明 |
+        |------|------|--------|------|
+        | `period` | str | "1mo" | 获取数据的时间范围。选项包括: "1d"(一天), "5d"(五天), "1mo"(一个月), "3mo"(三个月), "6mo"(六个月), "1y"(一年), "2y"(两年), "5y"(五年), "10y"(十年), "ytd"(年初至今), "max"(最大可获取范围) |
+        | `interval` | str | "1d" | 数据间隔。选项: "1m"(一分钟), "2m", "5m", "15m", "30m", "60m", "90m", "1h"(一小时), "1d"(一天), "5d", "1wk"(一周), "1mo"(一个月), "3mo" |
+        | `start` | str/datetime | None | 开始日期，格式为 "YYYY-MM-DD" 或 datetime 对象。如果指定，会覆盖 `period` 参数 |
+        | `end` | str/datetime | None | 结束日期，格式为 "YYYY-MM-DD" 或 datetime 对象 |
+        | `prepost` | bool | False | 是否包含盘前和盘后交易数据 |
+        | `actions` | bool | True | 是否调整股息和拆分 |
+        | `auto_adjust` | bool | True | 是否使用OHLC调整收盘价 |
+        | `back_adjust` | bool | False | 是否使用收盘价调整OHLC。仅当 `auto_adjust=False` 时有效 |
+        | `repair` | bool | False | 是否尝试修复和清理数据异常 |
+        | `keepna` | bool | False | 是否保留NaN值，False会删除包含NaN的行 |
+        | `proxy` | str | None | 使用代理服务器的URL |
+        | `rounding` | bool | False | 是否对价格进行舍入处理 |
+        | `timeout` | int | 10 | 连接超时时间（秒） |
+        | `raise_errors` | bool | False | 是否在出错时抛出异常，False时会返回空DataFrame |
+
+        ## 补充说明
+
+        1. **时间周期与时间间隔限制**：
+        - 间隔为 "1m" 时，只能获取最近 7 天的数据
+        - 间隔为 "2m", "5m", "15m", "30m", "60m", "90m", "1h" 时，只能获取最近 60 天的数据
+        - 间隔为 "1d" 及以上时，可以获取更长时间范围的数据
+
+        2. **auto_adjust 与 back_adjust**：
+        - `auto_adjust=True`：使用调整后的收盘价来调整开盘价、最高价和最低价
+        - `back_adjust=True`：基于最近的价格水平，向后调整所有数据
+
+        3. **返回值**：
+        - 返回一个 pandas DataFrame，包含以下列：Open, High, Low, Close, Volume，以及可能的 Dividends, Stock Splits (取决于 actions 参数)
+
+        4. **数据源**：
+        - 数据来自 Yahoo Finance API，可能受到访问限制或数据可用性的影响
+
     """
     try:
-        # 主要指数代码
-        indices = {
-            # "^GSPC": "标普500指数",
-            # "^IXIC": "纳斯达克综合指数",
-            # "^DJI": "道琼斯工业平均指数",
-            "^HSI": "恒生指数",
-            "^HSTECH": "恒生科技指数",
-            # "^.HSTECH": "恒生科技指数",
-            # "^HSTECH.HS": "恒生科技指数",
-            # "^FTSE": "富时100指数",
-            # "^N225": "日经225指数"
-        }
         
         result = []
         
-        for code, name in indices.items():
+        for code, name in index_codes.items():
             try:
                 # 获取指数数据
                 index_data = yf.Ticker(code)
-                info = index_data.history(period=period)
+                info = index_data.history(period=period, interval=interval,
+                                            start=start, end=end, prepost=prepost, actions=actions,
+                                            auto_adjust=auto_adjust, back_adjust=back_adjust, repair=repair, keepna=keepna,
+                                            proxy=proxy, rounding=rounding, timeout=timeout,
+                                            raise_errors=raise_errors)
                 
                 if not info.empty:
-                    # last_row = info.iloc[-1]
-                    # prev_close = info.iloc[-2]['Close'] if len(info) > 1 else last_row['Open']
-                    
-                    # result.append({
-                    #     "code": code,
-                    #     "name": name,
-                    #     "current": round(float(last_row['Close']), 2),
-                    #     "change": round(float(last_row['Close'] - prev_close), 2),
-                    #     "change_pct": round(float((last_row['Close'] - prev_close) / prev_close * 100), 2)
-                    # })
-                    result.append(yahoo_finance_data_to_global_index_data(info, code, name))
+                    result.append({
+                        "code": code,
+                        "name": name,
+                        "global_index_data": info
+                    })
             except Exception as e:
                 print(f"获取{code}数据错误: {str(e)}")
         
@@ -153,5 +175,10 @@ def get_stock_history(stock_code: str, period: str = "1mo") -> List[Dict[str, An
 
 if __name__ == "__main__":
     # 获取全球主要指数数据
-    indices = get_global_indices(period="1d")
-    print(ensure_serializable(indices))
+    from datetime import datetime, timedelta
+    # 获取当前日期
+    today = datetime.now()
+    # 计算昨天的日期
+    yesterday = today - timedelta(days=1)
+    indices = get_global_indices(interval="1d", start=yesterday, end=yesterday)
+    print(indices[0]["global_index_data"][0].close)

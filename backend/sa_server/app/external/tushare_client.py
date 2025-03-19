@@ -4,11 +4,7 @@ import pandas as pd
 from typing import Dict, List, Any, Optional
 import os
 from dotenv import load_dotenv
-from app.utils.data_formater import ensure_serializable
-from app.data.modules.cn_index_data import CNIndexBaseData, CNIndexData
 
-from app.utils.data_tpye_checker import data_check
-from app.utils.data_formater import dataframe_to_cn_model_instances
 
 # 加载环境变量
 load_dotenv()
@@ -22,7 +18,7 @@ except Exception as e:
     # 使用空的API实例，后续会进行错误处理
     pro = None
 
-def get_index_data() -> List[Dict[str, Any]]:
+def get_cn_indices(index_codes: List, trade_date: str = None) -> List[Dict[str, Any]]:
     """
     获取主要指数实时数据
     返回上证指数、深证成指、创业板指等主要指数
@@ -32,32 +28,27 @@ def get_index_data() -> List[Dict[str, Any]]:
         raise Exception("初始化TushareAPI失败")
     
     try:
-        # 获取指数列表
-        index_codes = ["000001.SH", "399001.SZ", "399006.SZ"]
-        index_data = []
-        
         # 获取指数基本信息
         df_basic = pro.index_basic(index_code=",".join(index_codes))
 
-        # 获取最新行情
-        # df_quote = pro.index_daily(ts_code=",".join(index_codes))
+        resutl = []
 
         # 整合数据
         for code in index_codes:
             basic_info = df_basic[df_basic['ts_code'] == code].iloc[0] if not df_basic.empty else None
-            quote_info = pro.index_daily(ts_code=code)
-
+            quote_info = pro.index_daily(ts_code=code, trade_date=trade_date) if trade_date else pro.index_daily(ts_code=code)
+            
             if basic_info is not None and quote_info is not None:
-                cn_index_base_data = CNIndexBaseData(**basic_info)
-                cn_index_data = dataframe_to_cn_model_instances(quote_info, CNIndexData)
+                resutl.append({
+                    "ts_code": code,
+                    "cn_index_base_data": basic_info,
+                    "cn_index_data": quote_info
+                })
         
-        return {
-            "cn_index_base_data": cn_index_base_data,
-            "cn_index_data": cn_index_data
-        }
+        return resutl
     except Exception as e:
-        print(f"获取指数数据错误: {str(e)}")
-        raise Exception(f"获取指数数据错误: {str(e)}")
+        print(f"获取CN指数数据错误: {str(e)}")
+        raise Exception(f"获取CN指数数据错误: {str(e)}")
 
 def get_stock_basic(stock_code: str) -> Dict[str, Any]:
     """

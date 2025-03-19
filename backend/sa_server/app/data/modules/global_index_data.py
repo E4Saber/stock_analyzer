@@ -23,4 +23,4 @@ class GlobalIndexData(BaseModel):
   stock_splits: float = 1.0         # 股票拆分，默认为 1
 
   class Config:
-    orm_mode = True
+    from_attributes = True

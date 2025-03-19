@@ -4,15 +4,15 @@ from datetime import datetime, timedelta
 import json
 
 from app.data.modules.cn_index_data import CNIndexBaseData, CNIndexData
-from app.data.modules.global_index_data import HKIndexData
-from app.external.tushare_client import get_index_data
+from app.external.tushare_client import get_cn_indices
 
 # 导入您的数据模型
 from app.data.modules.cn_index_data import CNIndexBaseData, CNIndexData
-from app.data.modules.global_index_data import HKIndexData
+from app.data.modules.global_index_data import GlobalIndexData
+
+from app.utils.date_utils import get_yesterday_yyyymmdd
 
 # 定义API响应模型
-
 class IndexResponse(BaseModel):
     """API响应通用结构"""
     code: int = 200
@@ -20,7 +20,7 @@ class IndexResponse(BaseModel):
     data: Any
     
     class Config:
-        orm_mode = True
+        from_attributes = True
         arbitrary_types_allowed = True
 
 # 处理函数
@@ -83,7 +83,7 @@ def transform_cn_index_for_ui(base_data: CNIndexBaseData, index_data: List[CNInd
     
     return result
 
-def transform_hk_index_for_ui(index_code: str, index_name: str, index_data: List[HKIndexData], dates: List[str]) -> Dict:
+def transform_hk_index_for_ui(index_code: str, index_name: str, index_data: List[GlobalIndexData], dates: List[str]) -> Dict:
     """
     转换港股指数数据为前端UI需要的格式
     
@@ -142,7 +142,6 @@ def transform_hk_index_for_ui(index_code: str, index_name: str, index_data: List
     return result
 
 # API端点处理函数
-
 def get_index_detail(index_code: str) -> IndexResponse:
     """
     获取指数详情API
@@ -160,7 +159,7 @@ def get_index_detail(index_code: str) -> IndexResponse:
             # 处理港股指数
             # 示例数据，实际应用中需要替换为真实数据获取
             index_name = "恒生指数" if index_code == "HSI" else "未知港股指数"
-            hk_data = [HKIndexData(open=18500.0, high=18700.0, low=18400.0, close=18650.0, volume=1500000.0)]
+            hk_data = [GlobalIndexData(open=18500.0, high=18700.0, low=18400.0, close=18650.0, volume=1500000.0)]
             dates = [datetime.now().strftime("%Y-%m-%d")]
             index_detail = transform_hk_index_for_ui(index_code, index_name, hk_data, dates)
         else:
@@ -168,37 +167,10 @@ def get_index_detail(index_code: str) -> IndexResponse:
             # 示例数据，实际应用中需要替换为真实数据获取
             try:
                 # 获取A股指数
-                cn_indices = get_index_data()
+                index_codes = ["000001.SH"]
+                cn_indices = get_index_data(index_codes, trade_date=get_yesterday_yyyymmdd())
             except Exception as e:
                 print(f"获取A股指数失败: {str(e)}")
-            # base_info = {
-            #     "ts_code": f"{index_code}.SH" if index_code == "000001" else f"{index_code}.SZ",
-            #     "name": "上证指数" if index_code == "000001" else "深证成指",
-            #     "fullname": "上海证券交易所综合指数" if index_code == "000001" else "深圳证券交易所成份股价指数",
-            #     "market": "上海" if index_code == "000001" else "深圳",
-            #     "publisher": "上海证券交易所" if index_code == "000001" else "深圳证券交易所",
-            #     "index_type": "综合指数" if index_code == "000001" else "成份股指数",
-            #     "category": "综合" if index_code == "000001" else "成份股",
-            #     "base_date": "1990-12-19" if index_code == "000001" else "1994-07-20",
-            #     "base_point": 100.0,
-            #     "list_date": "1991-07-15" if index_code == "000001" else "1995-01-23",
-            #     "weight_rule": "自由流通市值",
-            #     "desc": "反映上海证券交易所上市股票价格变动的统计指标" if index_code == "000001" else "反映深圳证券交易所上市股票价格变动的统计指标"
-            # }
-            
-            # quote_info = {
-            #     "ts_code": f"{index_code}.SH" if index_code == "000001" else f"{index_code}.SZ",
-            #     "trade_date": datetime.now().strftime("%Y%m%d"),
-            #     "close": 3273.76 if index_code == "000001" else 10624.23,
-            #     "open": 3245.87 if index_code == "000001" else 10534.54,
-            #     "high": 3280.12 if index_code == "000001" else 10650.32,
-            #     "low": 3240.56 if index_code == "000001" else 10520.75,
-            #     "pre_close": 3244.87 if index_code == "000001" else 10504.36,
-            #     "change": 28.89 if index_code == "000001" else 119.87,
-            #     "pct_chg": 0.89 if index_code == "000001" else 1.14,
-            #     "vol": 21500000.0 if index_code == "000001" else 18700000.0,
-            #     "amount": 265432100.0 if index_code == "000001" else 235678900.0
-            # }
             
             # # 转换为Pydantic模型
             # cn_index_base_data = CNIndexBaseData(**base_info)
@@ -213,6 +185,47 @@ def get_index_detail(index_code: str) -> IndexResponse:
     
     except Exception as e:
         return IndexResponse(code=500, message=f"获取指数详情失败: {str(e)}", data={})
+
+# 极简指数信息处理
+def get_minial_market_indices(cn_market_indeices: List[Dict[str, Any]], global_market_indeices: List[GlobalIndexData]) -> IndexResponse:
+    """
+    """
+    try:
+        # 格式转换
+        result = []
+        for cn_market_index in cn_market_indeices:
+            ts_code = cn_market_index["ts_code"]
+            cn_base_data = cn_market_index["cn_index_base_data"]
+            cn_index_data = cn_market_index.get("cn_index_data")
+            
+            # 转换为极简数据
+            minimal_data = {
+                "ts_code": ts_code,
+                "name": cn_base_data.name,
+                "current": cn_index_data.close.item() if len(cn_index_data) > 0 else 0,
+                "change": cn_index_data.change.item() if len(cn_index_data) > 0 else 0,
+                "pct_chg": cn_index_data.pct_chg.item() if len(cn_index_data) > 0 else 0,
+            }
+            
+            result.append(minimal_data)
+        
+        for global_market_index in global_market_indeices:
+            
+            # 转换为极简数据
+            minimal_data = {
+                "ts_code": global_market_index.ts_code,
+                "name": global_market_index.name,
+                "current": global_market_index.close if global_market_index else 0,
+                "change": global_market_index.change if global_market_index else 0,
+                "pct_chg": global_market_index.pct_chg if global_market_index else 0,
+            }
+            
+            result.append(minimal_data)
+        
+        return IndexResponse(data=result)
+    except Exception as e:
+        return IndexResponse(code=500, message=f"获取极简市场指数列表失败: {str(e)}", data={cn_market_indeices, global_market_indeices})
+
 
 def get_index_kline(index_code: str, period: str = "day") -> IndexResponse:
     """
