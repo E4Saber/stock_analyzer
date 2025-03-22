@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import List, Type, Dict, Any
 from pydantic import TypeAdapter
-from app.data.modules.global_index_data import GlobalIndexData
+from app.data.ui_modules.global_index_data import GlobalIndexData
 from app.config.indices_config import GLOBAL_INDICES
 from app.services.yfinance_services import get_minimal_global_indices_tday
 

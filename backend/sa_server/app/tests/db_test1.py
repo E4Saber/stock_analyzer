@@ -1,7 +1,7 @@
 import asyncio
 from app.db.connection import Database
-from app.db.cn_index_crud import CNIndexCRUD
-from app.data.modules import CNIndexBaseData
+from app.db.crud.cn_index_crud import CNIndexCRUD
+from app.data.ui_modules import CNIndexBaseData
 
 # 数据库连接
 DATABASE_URL = "postgresql://postgres:123456@localhost:5432/testdb"

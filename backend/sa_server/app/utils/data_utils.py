@@ -1,5 +1,5 @@
 from typing import Any, Dict, List
-from app.data.modules.cn_index_data import CNIndexBaseData, CNIndexData
+from app.data.ui_modules.cn_index_data import CNIndexBaseData, CNIndexData
 
 def match_index_data(base_data_list: List[CNIndexBaseData], index_data_list: List[CNIndexData]) -> List[Dict[str, Any]]:
 

@@ -3,7 +3,7 @@ import yfinance as yf
 import pandas as pd
 from typing import Dict, List, Any, Optional
 import datetime
-from app.data.modules.global_index_data import GlobalIndexData
+from app.data.ui_modules.global_index_data import GlobalIndexData
 
 def get_global_indices(index_codes: List, period="1d", interval="1d",
                 start=None, end=None, prepost=False, actions=True,

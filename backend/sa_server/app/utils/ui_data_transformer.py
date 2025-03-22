@@ -3,12 +3,12 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 import json
 
-from app.data.modules.cn_index_data import CNIndexBaseData, CNIndexData
+from app.data.ui_modules.cn_index_data import CNIndexBaseData, CNIndexData
 from app.external.tushare_client import get_cn_indices
 
 # 导入您的数据模型
-from app.data.modules.cn_index_data import CNIndexBaseData, CNIndexData
-from app.data.modules.global_index_data import GlobalIndexData
+from app.data.ui_modules.cn_index_data import CNIndexBaseData, CNIndexData
+from app.data.ui_modules.global_index_data import GlobalIndexData
 
 from app.utils.date_utils import get_yesterday_yyyymmdd
 

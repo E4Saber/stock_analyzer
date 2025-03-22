@@ -10,8 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "@ant-design/icons": "^5.2.6",
     "@reduxjs/toolkit": "^2.0.1",
     "@testing-library/jest-dom": "^5.17.0",
@@ -26,6 +24,9 @@
     "echarts": "^5.4.3",
     "echarts-for-react": "^3.0.2",
     "moment": "^2.29.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-draggable": "^4.4.6",
     "react-redux": "^9.0.1",
     "react-router-dom": "^6.20.1",
     "react-scripts": "5.0.1",

@@ -1,6 +1,6 @@
 # app/api/routes.py
 from fastapi import APIRouter
-from app.api.endpoints import stock, market
+from app.api.endpoints import stock, market, db_api
 
 api_router = APIRouter()
 
@@ -15,4 +15,10 @@ api_router.include_router(
     stock.router,
     prefix="/stocks",
     tags=["stocks"],
+)
+
+api_router.include_router(
+    db_api.router,
+    prefix="/db_api",
+    tags=["db_api"],
 )
