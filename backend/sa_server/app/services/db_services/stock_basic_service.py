@@ -10,6 +10,7 @@ class StockBasicService:
     
     def __init__(self, db):
         """
+        
         初始化服务
         
         参数:
