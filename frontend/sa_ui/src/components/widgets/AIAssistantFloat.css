@@ -8,10 +8,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  z-index: 1000;
+  z-index: 9999; /* 提高 z-index 确保在顶层 */
   overflow: hidden;
   transition: box-shadow 0.3s;
   border: 1px solid #f0f0f0;
+  /* 移除 transform，避免拖拽问题 */
+  will-change: transform; /* 优化性能 */
 }
 
 .ai-assistant-float:hover {
@@ -21,8 +23,10 @@
 /* 最小化状态 */
 .ai-assistant-minimized {
   position: fixed;
-  z-index: 1000;
+  z-index: 9999; /* 确保最小化图标在顶层 */
   cursor: pointer;
+  bottom: 20px;
+  right: 20px;
 }
 
 /* 悬浮窗头部 */

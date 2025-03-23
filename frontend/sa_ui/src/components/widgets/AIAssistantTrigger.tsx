@@ -17,9 +17,8 @@ const AIAssistantTrigger: React.FC<AIAssistantTriggerProps> = ({
   currentStock,
   position = 'bottom-right'
 }) => {
-  // 状态
+  // 只保留显示/隐藏状态，移除expanded状态
   const [visible, setVisible] = useState<boolean>(false);
-  const [minimized, setMinimized] = useState<boolean>(false);
   
   // 根据位置计算样式
   const getPositionStyle = (): React.CSSProperties => {
@@ -36,27 +35,12 @@ const AIAssistantTrigger: React.FC<AIAssistantTriggerProps> = ({
     }
   };
   
-  // 当股票变更时，如果悬浮窗可见，则将其打开（如果之前是最小化状态）
-  useEffect(() => {
-    if (currentStock && visible && minimized) {
-      setMinimized(false);
-    }
-  }, [currentStock]);
-  
   // 处理显示/隐藏
   const toggleVisibility = () => {
     setVisible(!visible);
-    if (!visible) {
-      setMinimized(false); // 显示时恢复完整窗口
-    }
   };
   
-  // 处理最小化
-  const handleMinimize = () => {
-    setMinimized(true);
-  };
-  
-  // 处理关闭
+  // 处理关闭 - 完全隐藏窗口
   const handleClose = () => {
     setVisible(false);
   };
@@ -70,7 +54,7 @@ const AIAssistantTrigger: React.FC<AIAssistantTriggerProps> = ({
       <div 
         style={{ 
           position: 'fixed',
-          zIndex: 999,
+          zIndex: 9999,
           ...positionStyle
         }}
       >
@@ -92,13 +76,13 @@ const AIAssistantTrigger: React.FC<AIAssistantTriggerProps> = ({
         </Tooltip>
       </div>
       
-      {/* AI分析悬浮窗 */}
-      <AIAssistantFloat
-        currentStock={currentStock}
-        visible={visible}
-        onClose={handleClose}
-        onMinimize={handleMinimize}
-      />
+      {/* AI分析悬浮窗 - 仅当visible为true时渲染 */}
+      {visible && (
+        <AIAssistantFloat
+          currentStock={currentStock}
+          onClose={handleClose}
+        />
+      )}
     </>
   );
 };

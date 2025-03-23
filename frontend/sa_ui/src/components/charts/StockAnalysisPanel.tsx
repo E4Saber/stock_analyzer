@@ -1,13 +1,11 @@
 // src/components/charts/StockAnalysisPanel.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
-  Card, Radio, Spin, Empty, Dropdown, Button, Space, Select,
-  Row, Col, Typography, DatePicker, Tooltip, Tag
+  Card, Radio, Spin, Empty, Button, Space, Select,
+  Row, Col, Typography, Tooltip, Modal, Tabs, Checkbox
 } from 'antd';
 import { 
-  LineChartOutlined, BarChartOutlined, 
-  DownOutlined, ReloadOutlined, FullscreenOutlined, 
-  PlusOutlined, SettingOutlined
+  SettingOutlined, FullscreenOutlined
 } from '@ant-design/icons';
 import { getStockKline, getStockIndicators } from '../../services/mock/mockStockService';
 import MainChartRenderer from './MainChartRenderer';
@@ -17,17 +15,11 @@ import {
   periodMap, getAvailableIndicators, getDefaultIndicatorPanels
 } from './config/chartConfig';
 import type { RadioChangeEvent } from 'antd';
-import moment from 'moment';
+import './StockAnalysisPanel.css';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
-
-// 自定义图表类型图标
-const CandlestickOutlined = () => (
-  <svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor">
-    <path d="M184 352h-48c-4.4 0-8 3.6-8 8v304c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V360c0-4.4-3.6-8-8-8zm736 0h-48c-4.4 0-8 3.6-8 8v304c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V360c0-4.4-3.6-8-8-8zM504.3 620.8l-110 66c-15.4 9.2-35.2-2.4-35.2-20.7V359.9c0-18.3 19.8-29.9 35.2-20.7l110 66c13.9 8.4 13.9 29.2 0 37.6-14 8.4-14 29.2 0 37.6 13.9 8.4 13.9 29.2 0 37.6-14 8.4-14 29.3 0 37.7 13.9 8.4 13.9 29.2 0 37.6-14 8.4-14 29.2 0 37.5z" />
-  </svg>
-);
+const { TabPane } = Tabs;
 
 // 组件属性定义
 interface StockAnalysisPanelProps {
@@ -42,6 +34,28 @@ interface StockAnalysisPanelProps {
   onStockChange?: (code: string) => void;
 }
 
+// 策略助手选项配置
+interface StrategySettings {
+  trendLine: boolean;
+  volumeDistribution: boolean;
+  companyAction: boolean;
+  tradingPoints: boolean;
+  holdingCost: boolean;
+  drawLines: boolean;
+  currentPriceLine: boolean;
+  alertLine: boolean;
+  gapMarking: boolean;
+}
+
+// K线样式配置
+interface KLineStyleSettings {
+  height: number; // 100-220%
+  style: 'hollow' | 'solid' | 'american' | 'line';
+  colorScheme: 'redGreen' | 'greenRed';
+  showPreAfterMarket: boolean;
+  showNightTrading: boolean;
+}
+
 const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
   stocks,
   defaultStock,
@@ -53,13 +67,13 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
   fullWidth = false,
   onStockChange
 }) => {
+  // ---------- 状态定义 ----------
   // 基本状态
   const [selectedStock, setSelectedStock] = useState<string>(defaultStock || (stocks[0]?.code || ''));
   const [mainChartData, setMainChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [period, setPeriod] = useState<PeriodType>(defaultPeriod);
-  const [chartType, setChartType] = useState<ChartType>(defaultChartType);
-  const [dateRange, setDateRange] = useState<[moment.Moment, moment.Moment] | null>(null);
+  const [chartType] = useState<ChartType>(defaultChartType); // 固定为K线图，不需要改变
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   // 技术指标相关状态
@@ -67,15 +81,40 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
   const [indicatorData, setIndicatorData] = useState<Record<IndicatorType, any>>({});
   const [availableIndicators] = useState<IndicatorType[]>(getAvailableIndicators());
   
-  // 比较功能相关状态
-  const [compareMode, setCompareMode] = useState<boolean>(false);
-  const [comparedStocks, setComparedStocks] = useState<string[]>([]);
-  const [comparedData, setComparedData] = useState<Record<string, any[]>>({});
-
+  // 设置弹窗状态
+  const [settingsVisible, setSettingsVisible] = useState<boolean>(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState<string>('mainIndicator');
+  
+  // 策略助手设置
+  const [strategySettings, setStrategySettings] = useState<StrategySettings>({
+    trendLine: true,
+    volumeDistribution: true,
+    companyAction: true,
+    tradingPoints: true,
+    holdingCost: true,
+    drawLines: true,
+    currentPriceLine: true,
+    alertLine: true,
+    gapMarking: false
+  });
+  
+  // K线样式设置
+  const [klineSettings, setKlineSettings] = useState<KLineStyleSettings>({
+    height: 100,
+    style: 'hollow',
+    colorScheme: 'redGreen',
+    showPreAfterMarket: true,
+    showNightTrading: true
+  });
+  
+  // 选中的主图指标
+  const [selectedMainIndicator, setSelectedMainIndicator] = useState<string>('MA');
+  
   // 图表引用
   const mainChartRef = useRef<any>(null);
   const indicatorChartRefs = useRef<Record<IndicatorType, any>>({});
 
+  // ---------- 数据获取 ----------
   // 获取股票K线数据
   useEffect(() => {
     if (!selectedStock) return;
@@ -90,12 +129,7 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
         
         // 根据图表类型转换数据格式
         let chartData;
-        if (chartType === 'line') {
-          chartData = response.data.map((item: any) => [
-            item.date,
-            item.close
-          ]);
-        } else if (chartType === 'candle') {
+        if (chartType === 'candle') {
           chartData = response.data.map((item: any) => [
             item.date,
             item.open,
@@ -104,23 +138,16 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
             item.high,
             item.volume
           ]);
-        } else if (chartType === 'bar') {
+        } else {
+          // 其他图表类型也转为相同格式提高兼容性
           chartData = response.data.map((item: any) => [
             item.date,
-            item.volume,
-            item.close > item.open ? 1 : -1  // 用于确定柱状图颜色
+            item.open,
+            item.close,
+            item.low,
+            item.high,
+            item.volume
           ]);
-        }
-        
-        // 如果设置了日期范围，过滤数据
-        if (dateRange && dateRange[0] && dateRange[1]) {
-          const startDate = dateRange[0].format('YYYY-MM-DD');
-          const endDate = dateRange[1].format('YYYY-MM-DD');
-          
-          chartData = chartData.filter((item: any) => {
-            const itemDate = item[0];
-            return itemDate >= startDate && itemDate <= endDate;
-          });
         }
         
         setMainChartData(chartData);
@@ -138,200 +165,126 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
     
     fetchStockData();
     
-    // 如果启用比较模式，获取比较数据
-    if (compareMode && comparedStocks.length > 0) {
-      fetchComparedData();
-    }
-    
     // 通知父组件股票已更改
     if (onStockChange) {
       onStockChange(selectedStock);
     }
-  }, [selectedStock, period, chartType, dateRange, compareMode, comparedStocks]);
+  }, [selectedStock, period, chartType, onStockChange]);
   
   // 获取技术指标数据
-  const fetchIndicatorData = async (stockCode: string, apiPeriod: string) => {
+  const fetchIndicatorData = useCallback(async (stockCode: string, apiPeriod: string) => {
     try {
       // 获取活跃的指标类型
       const activeIndicatorTypes = indicatorPanels
         .filter(panel => panel.active)
         .map(panel => panel.type);
       
-      if (activeIndicatorTypes.length === 0) return;
+      // 添加主图指标
+      const allIndicatorTypes = [...activeIndicatorTypes];
+      if (selectedMainIndicator === 'MA') {
+        allIndicatorTypes.push('MA');
+      } else if (selectedMainIndicator === 'BOLL') {
+        allIndicatorTypes.push('BOLL');
+      }
+      
+      if (allIndicatorTypes.length === 0) return;
       
       // 获取指标数据
-      const response = await getStockIndicators(stockCode, apiPeriod, activeIndicatorTypes);
+      const response = await getStockIndicators(stockCode, apiPeriod, allIndicatorTypes);
       
       // 更新指标数据
       setIndicatorData(response.data);
     } catch (error) {
       console.error('获取指标数据失败:', error);
     }
-  };
-  
-  // 获取比较数据
-  const fetchComparedData = async () => {
-    const apiPeriod = periodMap[period];
-    const newComparedData: Record<string, any[]> = {};
-    
-    // 使用Promise.all并行获取所有比较股票的数据
-    await Promise.all(
-      comparedStocks.map(async (code) => {
-        try {
-          const response = await getStockKline(code, apiPeriod, 'line');
-          
-          // 标准化数据，只保留日期和收盘价
-          const chartData = response.data.map((item: any) => [
-            item.date,
-            item.close
-          ]);
-          
-          // 如果设置了日期范围，过滤数据
-          if (dateRange && dateRange[0] && dateRange[1]) {
-            const startDate = dateRange[0].format('YYYY-MM-DD');
-            const endDate = dateRange[1].format('YYYY-MM-DD');
-            
-            newComparedData[code] = chartData.filter((item: any) => {
-              const itemDate = item[0];
-              return itemDate >= startDate && itemDate <= endDate;
-            });
-          } else {
-            newComparedData[code] = chartData;
-          }
-        } catch (error) {
-          console.error(`获取比较数据失败 (${code}):`, error);
-          newComparedData[code] = [];
-        }
-      })
-    );
-    
-    setComparedData(newComparedData);
-  };
+  }, [indicatorPanels, selectedMainIndicator]);
 
+  // ---------- 事件处理函数 ----------
   // 处理股票选择变化
-  const handleStockChange = (e: RadioChangeEvent) => {
+  const handleStockChange = useCallback((e: RadioChangeEvent) => {
     setSelectedStock(e.target.value);
-  };
+  }, []);
 
   // 处理周期选择变化
-  const handlePeriodChange = (value: PeriodType) => {
+  const handlePeriodChange = useCallback((value: PeriodType) => {
     setPeriod(value);
-  };
-  
-  // 处理图表类型变化
-  const handleChartTypeChange = (type: ChartType) => {
-    setChartType(type);
-  };
-  
-  // 处理比较模式切换
-  const handleCompareToggle = () => {
-    setCompareMode(!compareMode);
-    if (!compareMode) {
-      // 默认添加第一个不同的股票作为比较
-      const differentStock = stocks.find(stock => stock.code !== selectedStock);
-      if (differentStock) {
-        setComparedStocks([differentStock.code]);
-      }
-    } else {
-      // 关闭比较模式
-      setComparedStocks([]);
-      setComparedData({});
-    }
-  };
-  
-  // 处理添加比较股票
-  const handleAddCompareStock = (code: string) => {
-    if (!comparedStocks.includes(code)) {
-      setComparedStocks([...comparedStocks, code]);
-    }
-  };
-  
-  // 处理移除比较股票
-  const handleRemoveCompareStock = (code: string) => {
-    setComparedStocks(comparedStocks.filter(item => item !== code));
-    
-    // 从比较数据中移除
-    const newComparedData = { ...comparedData };
-    delete newComparedData[code];
-    setComparedData(newComparedData);
-  };
-  
-  // 处理日期范围变化
-  const handleDateRangeChange = (dates: any) => {
-    setDateRange(dates);
-  };
+  }, []);
   
   // 切换全屏模式
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(prev => !prev);
+  }, []);
   
-  // 刷新数据
-  const refreshData = () => {
-    // 通过重新设置选中的股票来触发数据刷新
-    const current = selectedStock;
-    setSelectedStock('');
-    setTimeout(() => {
-      setSelectedStock(current);
-    }, 100);
-  };
+  // 打开设置弹窗
+  const openSettings = useCallback((tab: string = 'mainIndicator') => {
+    setActiveSettingsTab(tab);
+    setSettingsVisible(true);
+  }, []);
+  
+  // 获取当前显示的指标面板
+  const getActiveIndicatorPanels = useCallback(() => {
+    return indicatorPanels.filter(panel => panel.active);
+  }, [indicatorPanels]);
   
   // 添加指标面板
-  const handleAddIndicatorPanel = () => {
-    // 找到第一个未激活的指标
-    const inactiveIndicator = availableIndicators.find(indicator => 
-      !indicatorPanels.some(panel => panel.type === indicator && panel.active)
-    );
-    
-    if (inactiveIndicator) {
-      const updatedPanels = [...indicatorPanels];
-      const existingPanelIndex = updatedPanels.findIndex(panel => panel.type === inactiveIndicator);
+  const handleAddIndicatorPanel = useCallback((type: IndicatorType) => {
+    setIndicatorPanels(prevPanels => {
+      const updatedPanels = [...prevPanels];
+      const existingPanelIndex = updatedPanels.findIndex(panel => panel.type === type);
       
       if (existingPanelIndex >= 0) {
         // 如果面板已存在但未激活，则激活它
         updatedPanels[existingPanelIndex].active = true;
       } else {
         // 否则添加新面板
-        updatedPanels.push({ type: inactiveIndicator, height: 120, active: true });
+        updatedPanels.push({ type, height: 120, active: true });
       }
       
-      setIndicatorPanels(updatedPanels);
-    }
-  };
+      return updatedPanels;
+    });
+    
+    setSettingsVisible(false);
+  }, []);
   
   // 移除指标面板
-  const handleRemoveIndicatorPanel = (type: IndicatorType) => {
-    const updatedPanels = indicatorPanels.map(panel => 
-      panel.type === type ? { ...panel, active: false } : panel
+  const handleRemoveIndicatorPanel = useCallback((type: IndicatorType) => {
+    // 获取当前活跃的面板
+    const activePanels = getActiveIndicatorPanels();
+    
+    // 如果要移除的是第一个活跃面板，则不执行任何操作
+    if (activePanels.length > 0 && activePanels[0].type === type) {
+      return;
+    }
+    
+    // 否则正常移除
+    setIndicatorPanels(prevPanels => 
+      prevPanels.map(panel => 
+        panel.type === type ? { ...panel, active: false } : panel
+      )
     );
-    setIndicatorPanels(updatedPanels);
-  };
+  }, [getActiveIndicatorPanels]);
   
   // 调整指标面板高度
-  const handleResizeIndicatorPanel = (type: IndicatorType, height: number) => {
-    const updatedPanels = indicatorPanels.map(panel => 
-      panel.type === type ? { ...panel, height } : panel
+  const handleResizeIndicatorPanel = useCallback((type: IndicatorType, height: number) => {
+    setIndicatorPanels(prevPanels => 
+      prevPanels.map(panel => 
+        panel.type === type ? { ...panel, height } : panel
+      )
     );
-    setIndicatorPanels(updatedPanels);
-  };
-
-  // 获取当前显示的指标面板
-  const getActiveIndicatorPanels = () => {
-    return indicatorPanels.filter(panel => panel.active);
-  };
+  }, []);
   
   // 初始化图表实例引用
-  const handleMainChartInit = (instance: any) => {
+  const handleMainChartInit = useCallback((instance: any) => {
     mainChartRef.current = instance;
-  };
+  }, []);
   
   // 初始化指标图表实例引用
-  const handleIndicatorChartInit = (type: IndicatorType, instance: any) => {
+  const handleIndicatorChartInit = useCallback((type: IndicatorType, instance: any) => {
     indicatorChartRefs.current[type] = instance;
-  };
+  }, []);
 
   // 计算主图表高度
-  const calculateMainChartHeight = () => {
+  const calculateMainChartHeight = useCallback(() => {
     // 基础高度
     const baseHeight = height || 600;
     
@@ -348,43 +301,269 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
     
     // 主图表占用剩余高度，但至少有200px
     return Math.max(baseHeight - controlsHeight - totalIndicatorHeight, 200);
-  };
+  }, [height, showHeader, getActiveIndicatorPanels]);
+  
+  // 处理主图指标切换
+  const handleMainIndicatorChange = useCallback((indicator: string) => {
+    setSelectedMainIndicator(indicator);
+    setSettingsVisible(false);
+    
+    // 重新获取数据
+    const apiPeriod = periodMap[period];
+    fetchIndicatorData(selectedStock, apiPeriod);
+  }, [selectedStock, period, fetchIndicatorData]);
+  
+  // 处理策略助手设置变更
+  const handleStrategySettingChange = useCallback((key: keyof StrategySettings) => {
+    setStrategySettings(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  }, []);
+  
+  // 处理K线样式设置变更
+  const handleKLineStyleChange = useCallback((key: keyof KLineStyleSettings, value: any) => {
+    setKlineSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  }, []);
 
-  // 为Dropdown菜单准备items
-  const getCompareStockItems = () => {
-    return stocks
-      .filter(stock => stock.code !== selectedStock && !comparedStocks.includes(stock.code))
-      .map(stock => ({
-        key: stock.code,
-        label: `${stock.name} (${stock.code})`,
-        onClick: () => handleAddCompareStock(stock.code)
-      }));
-  };
+  // ---------- 记忆化渲染 ----------
+  // 使用useMemo优化指标面板渲染，减少不必要的重新渲染
+  const memoizedIndicatorPanels = useMemo(() => {
+    const activePanels = getActiveIndicatorPanels();
+    
+    return activePanels.map((panel, index) => (
+      <IndicatorChartRenderer
+        key={panel.type}
+        indicatorType={panel.type}
+        indicatorData={indicatorData[panel.type]}
+        chartData={mainChartData}
+        loading={loading}
+        height={panel.height}
+        period={period}
+        onRemove={handleRemoveIndicatorPanel}
+        onResize={handleResizeIndicatorPanel}
+        onChartInit={(instance) => handleIndicatorChartInit(panel.type, instance)}
+        isFirstIndicator={index === 0} // 第一个副图不显示关闭按钮
+      />
+    ));
+  }, [
+    indicatorPanels, 
+    indicatorData, 
+    mainChartData, 
+    loading, 
+    period, 
+    handleRemoveIndicatorPanel, 
+    handleResizeIndicatorPanel, 
+    handleIndicatorChartInit,
+    getActiveIndicatorPanels
+  ]);
 
-  // 为Dropdown菜单准备indicators items
-  const getIndicatorItems = () => {
-    return availableIndicators
-      .filter(indicator => 
-        !indicatorPanels.some(panel => panel.type === indicator && panel.active)
-      )
-      .map(indicator => ({
-        key: indicator,
-        label: indicator,
-        onClick: () => {
-          const updatedPanels = [...indicatorPanels];
-          const existingPanelIndex = updatedPanels.findIndex(panel => panel.type === indicator);
+  // 记忆化主图表高度计算，减少不必要的重新计算
+  const mainChartHeight = useMemo(() => calculateMainChartHeight(), 
+    [calculateMainChartHeight]);
+
+  // ---------- 渲染方法 ----------
+  // 渲染标题栏
+  const renderHeader = useCallback(() => {
+    if (!showHeader) return null;
+    
+    return (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          {/* <Tooltip title={`${stocks.find(s => s.code === selectedStock)?.name || ''} (${selectedStock})`}>
+            <Text strong style={{ fontSize: 16 }}>
+              {stocks.find(s => s.code === selectedStock)?.name || ''} ({selectedStock})
+            </Text>
+          </Tooltip> */}
+        </div>
+        
+        <Space>
+          {/* <Select defaultValue="none" style={{ width: 90, marginRight: 8 }}>
+            <Option value="none">不复权</Option>
+            <Option value="forward">前复权</Option>
+            <Option value="backward">后复权</Option>
+          </Select> */}
           
-          if (existingPanelIndex >= 0) {
-            updatedPanels[existingPanelIndex].active = true;
-          } else {
-            updatedPanels.push({ type: indicator, height: 120, active: true });
-          }
+          {/* 周期选择 */}
+          <Select 
+            value={period} 
+            onChange={handlePeriodChange}
+            style={{ width: 100 }}
+          >
+            <Option value="1m">1分钟</Option>
+            <Option value="5m">5分钟</Option>
+            <Option value="15m">15分钟</Option>
+            <Option value="30m">30分钟</Option>
+            <Option value="60m">60分钟</Option>
+            <Option value="day">日线</Option>
+            <Option value="week">周线</Option>
+            <Option value="month">月线</Option>
+          </Select>
           
-          setIndicatorPanels(updatedPanels);
-        }
-      }));
-  };
+          {/* 设置按钮 */}
+          <Button icon={<SettingOutlined />} onClick={() => openSettings()} />
+          <Button icon={<FullscreenOutlined />} onClick={toggleFullscreen} />
+        </Space>
+      </div>
+    );
+  }, [showHeader, stocks, selectedStock, period, handlePeriodChange, toggleFullscreen, openSettings]);
 
+  // 渲染主图指标选项
+  const renderMainIndicatorOptions = useCallback(() => {
+    const mainIndicators = ['无', 'MA', 'VMA', 'EMA', 'SAR', 'BBI', 'PBX', 'BBIBOLL', 'MIKE', 'ENE', 'ALLIGAT', 'HMA', 'LMA', 'BOLL'];
+    
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        {mainIndicators.map(indicator => (
+          <Button 
+            key={indicator}
+            type={selectedMainIndicator === indicator ? 'primary' : 'default'}
+            onClick={() => handleMainIndicatorChange(indicator)}
+            style={{ textAlign: 'center' }}
+          >
+            {indicator}
+          </Button>
+        ))}
+      </div>
+    );
+  }, [selectedMainIndicator, handleMainIndicatorChange]);
+
+  // 渲染副图指标选项
+  const renderSubIndicatorOptions = useCallback(() => {
+    const subIndicators = [
+      { type: 'VOL', name: '成交量' },
+      { type: 'VRSI', name: 'VRSI' },
+      { type: 'KDJ', name: 'KDJ' },
+      { type: 'ADTM', name: 'ADTM' },
+      { type: 'RSI', name: 'RSI' },
+      { type: 'MFI', name: 'MFI' },
+      { type: 'OBV', name: 'OBV' },
+      { type: 'EMV', name: 'EMV' },
+      { type: 'MACD', name: 'MACD' },
+      { type: 'DMI', name: 'DMI' },
+      { type: 'ATR', name: 'ATR' },
+      { type: 'DMA', name: 'DMA' }
+    ];
+    
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        {subIndicators.map(indicator => (
+          <Button 
+            key={indicator.type}
+            type={getActiveIndicatorPanels().find(p => p.type === indicator.type) ? 'primary' : 'default'}
+            onClick={() => handleAddIndicatorPanel(indicator.type as IndicatorType)}
+            style={{ textAlign: 'center' }}
+          >
+            {indicator.name}
+          </Button>
+        ))}
+      </div>
+    );
+  }, [getActiveIndicatorPanels, handleAddIndicatorPanel]);
+  
+  // 渲染策略助手选项
+  const renderStrategyOptions = useCallback(() => {
+    const strategyOptions = [
+      { key: 'trendLine', label: '趋势线' },
+      { key: 'volumeDistribution', label: '筹码分布' },
+      { key: 'companyAction', label: '公司行动' },
+      { key: 'tradingPoints', label: '买卖打点' },
+      { key: 'holdingCost', label: '持仓成本' },
+      { key: 'drawLines', label: '画线' },
+      { key: 'currentPriceLine', label: '现价线' },
+      { key: 'alertLine', label: '预警线' },
+      { key: 'gapMarking', label: '跳空缺口' }
+    ];
+    
+    return (
+      <Row gutter={[16, 16]}>
+        {strategyOptions.map(option => (
+          <Col span={12} key={option.key}>
+            <Checkbox 
+              checked={strategySettings[option.key as keyof StrategySettings]}
+              onChange={() => handleStrategySettingChange(option.key as keyof StrategySettings)}
+            >
+              {option.label}
+            </Checkbox>
+          </Col>
+        ))}
+      </Row>
+    );
+  }, [strategySettings, handleStrategySettingChange]);
+
+  // 渲染K线样式选项
+  const renderKlineStyleOptions = useCallback(() => {
+    return (
+      <>
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 8 }}>K线图高度</div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ marginRight: 8 }}>100%</div>
+            <div style={{ flex: 1 }}>
+              <input 
+                type="range" 
+                min={100} 
+                max={220} 
+                value={klineSettings.height} 
+                onChange={(e) => handleKLineStyleChange('height', parseInt(e.target.value))}
+                style={{ width: '100%' }}
+              />
+            </div>
+            <div style={{ marginLeft: 8 }}>220%</div>
+          </div>
+        </div>
+        
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 8 }}>K线样式</div>
+          <Radio.Group 
+            value={klineSettings.style}
+            onChange={(e) => handleKLineStyleChange('style', e.target.value)}
+          >
+            <Radio value="hollow">空心蜡烛图</Radio>
+            <Radio value="solid">实心K线</Radio>
+            <Radio value="american">美国线</Radio>
+            <Radio value="line">折线图</Radio>
+          </Radio.Group>
+        </div>
+        
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 8 }}>涨跌偏好</div>
+          <Radio.Group 
+            value={klineSettings.colorScheme}
+            onChange={(e) => handleKLineStyleChange('colorScheme', e.target.value)}
+          >
+            <Radio value="redGreen">红涨绿跌</Radio>
+            <Radio value="greenRed">绿涨红跌</Radio>
+          </Radio.Group>
+        </div>
+        
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 8 }}>延长时段（支持5日和分钟K的图表数据）</div>
+          <div>
+            <Checkbox 
+              checked={klineSettings.showPreAfterMarket}
+              onChange={(e) => handleKLineStyleChange('showPreAfterMarket', e.target.checked)}
+            >
+              盘前盘后
+            </Checkbox>
+          </div>
+          <div>
+            <Checkbox 
+              checked={klineSettings.showNightTrading}
+              onChange={(e) => handleKLineStyleChange('showNightTrading', e.target.checked)}
+            >
+              夜盘
+            </Checkbox>
+          </div>
+        </div>
+      </>
+    );
+  }, [klineSettings, handleKLineStyleChange]);
+
+  // ---------- 主渲染 ----------
   return (
     <Card
       style={{ 
@@ -394,181 +573,66 @@ const StockAnalysisPanel: React.FC<StockAnalysisPanelProps> = ({
       }}
       className={isFullscreen ? 'fullscreen-chart' : ''}
       bodyStyle={{ padding: '8px' }}
-      title={
-        showHeader && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Radio.Group value={selectedStock} onChange={handleStockChange} buttonStyle="solid">
-              {stocks.slice(0, 5).map(stock => (
-                <Radio.Button key={stock.code} value={stock.code}>
-                  <Tooltip title={`${stock.name} ${stock.current} (${stock.change >= 0 ? '+' : ''}${stock.change_percent}%)`}>
-                    <span>
-                      {stock.name}
-                      <span style={{ 
-                        marginLeft: 5,
-                        color: stock.change >= 0 ? '#3f8600' : '#cf1322'
-                      }}>
-                        {stock.change >= 0 ? '+' : ''}{stock.change_percent}%
-                      </span>
-                    </span>
-                  </Tooltip>
-                </Radio.Button>
-              ))}
-            </Radio.Group>
-            
-            <Space>
-              {/* 图表类型切换 */}
-              <Radio.Group value={chartType} onChange={(e) => handleChartTypeChange(e.target.value)}>
-                <Tooltip title="折线图">
-                  <Radio.Button value="line"><LineChartOutlined /></Radio.Button>
-                </Tooltip>
-                <Tooltip title="K线图">
-                  <Radio.Button value="candle"><CandlestickOutlined /></Radio.Button>
-                </Tooltip>
-                <Tooltip title="成交量">
-                  <Radio.Button value="bar"><BarChartOutlined /></Radio.Button>
-                </Tooltip>
-              </Radio.Group>
-              
-              {/* 周期选择 */}
-              <Select 
-                value={period} 
-                onChange={handlePeriodChange}
-                style={{ width: 100 }}
-              >
-                <Option value="1m">1分钟</Option>
-                <Option value="5m">5分钟</Option>
-                <Option value="15m">15分钟</Option>
-                <Option value="30m">30分钟</Option>
-                <Option value="60m">60分钟</Option>
-                <Option value="day">日线</Option>
-                <Option value="week">周线</Option>
-                <Option value="month">月线</Option>
-              </Select>
-              
-              {/* 操作按钮 */}
-              <Button 
-                type={compareMode ? "primary" : "default"}
-                onClick={handleCompareToggle}
-              >
-                对比
-              </Button>
-              
-              <Dropdown 
-                menu={{
-                  items: getCompareStockItems(),
-                }}
-                disabled={!compareMode}
-              >
-                <Button>
-                  <Space>
-                    添加对比
-                    <DownOutlined />
-                  </Space>
-                </Button>
-              </Dropdown>
-              
-              <Button onClick={refreshData}><ReloadOutlined /></Button>
-              <Button onClick={toggleFullscreen}><FullscreenOutlined /></Button>
-              
-              {/* 添加指标按钮 */}
-              <Dropdown
-                menu={{
-                  items: getIndicatorItems()
-                }}
-              >
-                <Button icon={<PlusOutlined />}>
-                  添加指标
-                </Button>
-              </Dropdown>
-            </Space>
-          </div>
-        )
-      }
+      title={renderHeader()}
       bordered={false}
     >
-      {compareMode && comparedStocks.length > 0 && (
-        <div style={{ marginBottom: '10px' }}>
-          <Text strong>正在对比: </Text>
-          {comparedStocks.map(code => {
-            const stock = stocks.find(s => s.code === code);
-            return (
-              <StockTag
-                key={code}
-                closable
-                onClose={() => handleRemoveCompareStock(code)}
-                style={{ marginRight: '8px' }}
-              >
-                {stock ? `${stock.name} (${stock.code})` : code}
-              </StockTag>
-            );
-          })}
-        </div>
-      )}
-      
       {/* 主图表 */}
       <MainChartRenderer
         selectedStock={selectedStock}
         chartData={mainChartData}
         loading={loading}
-        chartType={chartType}
-        chartHeight={calculateMainChartHeight()}
+        chartType={'candle'} // 固定为K线图类型
+        chartHeight={mainChartHeight}
         period={period}
         showTitle={showTitle}
-        compareMode={compareMode}
-        comparedStocks={comparedStocks}
-        comparedData={comparedData}
-        indicatorData={indicatorData}
         stocks={stocks}
+        indicatorData={indicatorData}
+        mainIndicator={selectedMainIndicator}
         onChartInit={handleMainChartInit}
       />
       
-      {/* 指标图表 */}
-      {getActiveIndicatorPanels().map(panel => (
-        <IndicatorChartRenderer
-          key={panel.type}
-          indicatorType={panel.type}
-          indicatorData={indicatorData[panel.type]}
-          chartData={mainChartData}
-          loading={loading}
-          height={panel.height}
-          period={period}
-          onRemove={handleRemoveIndicatorPanel}
-          onResize={handleResizeIndicatorPanel}
-          onChartInit={handleIndicatorChartInit}
-        />
-      ))}
+      {/* 指标图表 - 使用记忆化渲染 */}
+      {memoizedIndicatorPanels}
       
-      {/* 底部控制栏 - 添加指标按钮 */}
+      {/* 添加指标按钮 */}
       {getActiveIndicatorPanels().length === 0 && (
         <div style={{ textAlign: 'center', marginTop: '10px' }}>
           <Button 
             type="dashed" 
-            icon={<PlusOutlined />} 
-            onClick={handleAddIndicatorPanel}
+            onClick={() => openSettings('subIndicator')}
           >
             添加技术指标
           </Button>
         </div>
       )}
+      
+      {/* 设置弹窗 */}
+      <Modal
+        title="图表设置"
+        open={settingsVisible}
+        onCancel={() => setSettingsVisible(false)}
+        footer={null}
+        width={600}
+      >
+        <Tabs activeKey={activeSettingsTab} onChange={setActiveSettingsTab}>
+          <TabPane tab="主图" key="mainIndicator">
+            {renderMainIndicatorOptions()}
+          </TabPane>
+          
+          <TabPane tab="副图" key="subIndicator">
+            {renderSubIndicatorOptions()}
+          </TabPane>
+          
+          <TabPane tab="策略助手" key="strategy">
+            {renderStrategyOptions()}
+          </TabPane>
+          
+          <TabPane tab="K线样式" key="klineStyle">
+            {renderKlineStyleOptions()}
+          </TabPane>
+        </Tabs>
+      </Modal>
     </Card>
-  );
-};
-
-// 自定义Tag组件，包含关闭按钮
-const StockTag: React.FC<{
-  children: React.ReactNode;
-  closable?: boolean;
-  onClose?: () => void;
-  style?: React.CSSProperties;
-}> = ({ children, closable, onClose, style }) => {
-  return (
-    <Tag 
-      closable={closable}
-      onClose={onClose}
-      style={style}
-    >
-      {children}
-    </Tag>
   );
 };
 

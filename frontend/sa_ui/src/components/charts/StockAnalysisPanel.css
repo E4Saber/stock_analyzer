@@ -1,0 +1,74 @@
+/* StockAnalysisPanel.css */
+
+/* 隐藏所有可能的ECharts关闭按钮 */
+.indicator-chart-container .echarts-tooltip-close,
+.indicator-chart-container .ec-extension-close,
+.indicator-chart-container .ec-toolbox-close,
+.indicator-chart-container .echarts-container div[style*="position: absolute"][style*="right: 0"],
+.indicator-chart-container [data-zr-dom-id] div[style*="position: absolute"][style*="right: 0"],
+.indicator-chart-container [data-zr-dom-id] div[style*="position: absolute"][style*="top: 10px"][style*="right: 10px"],
+.indicator-chart-container [data-zr-dom-id] div[style*="position: absolute"][style*="top: 10px"][style*="right: 0px"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 防止图表超出容器 */
+.indicator-chart-container {
+  overflow: hidden;
+  position: relative;
+}
+
+/* 优化图表边距 */
+.indicator-chart-container .echarts-for-react {
+  margin: 0;
+  padding: 0;
+}
+
+/* 全屏时的样式 */
+.fullscreen-chart {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: white;
+}
+
+/* 指标面板样式 */
+.active-indicator-panel {
+  margin-bottom: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 设置弹窗样式 */
+.settings-modal .ant-modal-body {
+  padding: 16px;
+}
+
+/* 设置按钮样式 */
+.settings-button {
+  border-radius: 2px;
+}
+
+/* 修复Ant设计组件间隙 */
+.ant-card-body {
+  padding: 12px !important;
+}
+
+.ant-tabs-content {
+  padding-top: 8px;
+}
+
+/* 修复响应式问题 */
+@media (max-width: 768px) {
+  .ant-modal {
+    max-width: 90vw;
+  }
+}

@@ -14,9 +14,11 @@ import {
 } from '@ant-design/icons';
 import { getStockDetail, getStockFinancial } from '../services/mock/mockStockService';
 import StockAnalysisPanel from '../components/charts/StockAnalysisPanel';
+import StockInfoHeader from '../components/widgets/StockInfoHeader';
 import { StockData } from '../components/charts/config/chartConfig';
 import { ShareholderData, FinancialIndicator, MarketNews } from '../types/market';
 import { formatLargeNumber, formatPercent } from '../utils/numberFormatter';
+import AIAssistantTrigger from '../components/widgets/AIAssistantTrigger';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -199,102 +201,40 @@ const StockDetail: React.FC = () => {
     },
   ];
 
+  // 增强股票数据 - 添加图片中显示的额外数据
+  const enhancedStockData = {
+    ...stockData,
+    prevClose: 103.00,  // 昨收
+    amount: 60.25 * 100000000,  // 成交额（亿元）
+    circulating_market_cap: 1051 * 100000000,  // 流通市值（亿元）
+    total_shares: 11.14 * 100000000,  // 总股本（亿）
+    circulating_shares: 11.10 * 100000000,  // 流通股本（亿）
+    amplitude: stockData.high && stockData.low ? 
+      ((stockData.high - stockData.low) / stockData.low * 100) : 4.66,  // 振幅
+    high_52w: 157.54,  // 52周最高
+    low_52w: 83.54,    // 52周最低
+    roa: 5.52,         // ROA
+    roe: 10.10,        // ROE
+    volume_ratio: 2.98, // 量比
+    eps_ttm: 3.46,     // 每股收益TTM
+    eps_lyr: 0.70,     // 每股收益LYR
+    dividend: 0.46,    // 股息
+    dividend_yield: 0.49, // 股息收益率
+    forecast_pe: 13.85, // 预测市盈率
+    forecast_eps: 6.839 // 预测每股收益
+  };
+
   return (
     <div className="stock-detail-container">
-      {/* 股票基本信息卡片 */}
-      <Card bordered={false} className="stock-info-card">
-        <Row gutter={[24, 16]} align="middle">
-          <Col xs={24} md={12} lg={8}>
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              <Title level={2} style={{ margin: 0 }}>
-                {stockData.name} 
-                <Text type="secondary" style={{ fontSize: '18px', marginLeft: '8px' }}>
-                  {stockData.code}
-                </Text>
-              </Title>
-              
-              <Space align="center">
-                <Text style={{ fontSize: '32px', fontWeight: 'bold', color: stockData.change >= 0 ? '#cf1322' : '#3f8600' }}>
-                  {stockData.current.toFixed(2)}
-                </Text>
-                <Space>
-                  <Tag 
-                    color={stockData.change >= 0 ? 'red' : 'green'} 
-                    style={{ fontSize: '14px', padding: '4px 8px' }}
-                  >
-                    {stockData.change >= 0 ? <RiseOutlined /> : <FallOutlined />}
-                    {stockData.change >= 0 ? '+' : ''}{stockData.change.toFixed(2)}
-                  </Tag>
-                  <Tag 
-                    color={stockData.change >= 0 ? 'red' : 'green'} 
-                    style={{ fontSize: '14px', padding: '4px 8px' }}
-                  >
-                    {stockData.change >= 0 ? '+' : ''}{stockData.change_percent.toFixed(2)}%
-                  </Tag>
-                </Space>
-              </Space>
-              
-              <Space size="large">
-                <Text type="secondary">
-                  量比: <Text strong>{(stockData.volume / (stockData.volume || 1) * 0.8).toFixed(2)}</Text>
-                </Text>
-                <Text type="secondary">
-                  换手率: <Text strong>{stockData.turnover ? stockData.turnover.toFixed(2) : '-'}%</Text>
-                </Text>
-                <Text type="secondary">
-                  振幅: <Text strong>{((stockData.high! - stockData.low!) / stockData.current * 100).toFixed(2)}%</Text>
-                </Text>
-              </Space>
-            </Space>
-          </Col>
-          
-          <Col xs={24} md={12} lg={16}>
-            <Row gutter={[16, 16]}>
-              <Col xs={12} sm={8} md={6}>
-                <Statistic title="今开" value={stockData.open || '-'} precision={2} />
-              </Col>
-              <Col xs={12} sm={8} md={6}>
-                <Statistic title="最高" value={stockData.high || '-'} precision={2} />
-              </Col>
-              <Col xs={12} sm={8} md={6}>
-                <Statistic title="最低" value={stockData.low || '-'} precision={2} />
-              </Col>
-              <Col xs={12} sm={8} md={6}>
-                <Statistic 
-                  title="成交量" 
-                  value={stockData.volume ? formatLargeNumber(stockData.volume) : '-'} 
-                />
-              </Col>
-              <Col xs={12} sm={8} md={6}>
-                <Statistic title="市盈率" value={stockData.pe || '-'} precision={2} />
-              </Col>
-              <Col xs={12} sm={8} md={6}>
-                <Statistic title="市净率" value={stockData.pb || '-'} precision={2} />
-              </Col>
-              <Col xs={12} sm={8} md={6}>
-                <Statistic 
-                  title="市值" 
-                  value={stockData.market_cap ? formatLargeNumber(stockData.market_cap) : '-'} 
-                />
-              </Col>
-              <Col xs={12} sm={8} md={6}>
-                <Statistic 
-                  title="行业" 
-                  value={stockData.industry || '-'} 
-                  formatter={(value) => <Tag color="blue">{value}</Tag>} 
-                />
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-      </Card>
+      {/* 使用新的股票信息头部组件 */}
+      <StockInfoHeader stock={enhancedStockData} />
       
       <div style={{ height: '16px' }} />
       
       {/* 股票分析面板 */}
       <StockAnalysisPanel
-        stocks={[stockData, ...relatedStocks]}
-        defaultStock={stockData.code}
+        stocks={[enhancedStockData, ...relatedStocks]}
+        defaultStock={enhancedStockData.code}
         height={600}
         fullWidth={true}
       />
@@ -420,8 +360,8 @@ const StockDetail: React.FC = () => {
                     <Descriptions.Item label="股票简称">{stockData.name}</Descriptions.Item>
                     <Descriptions.Item label="所属行业">{stockData.industry || '-'}</Descriptions.Item>
                     <Descriptions.Item label="上市日期">2001-08-27</Descriptions.Item>
-                    <Descriptions.Item label="总股本">{formatLargeNumber(1254678900)}股</Descriptions.Item>
-                    <Descriptions.Item label="流通股本">{formatLargeNumber(987654321)}股</Descriptions.Item>
+                    <Descriptions.Item label="总股本">{formatLargeNumber(enhancedStockData.total_shares || 0)}股</Descriptions.Item>
+                    <Descriptions.Item label="流通股本">{formatLargeNumber(enhancedStockData.circulating_shares || 0)}股</Descriptions.Item>
                     <Descriptions.Item label="注册资本">{formatLargeNumber(1200000000)}元</Descriptions.Item>
                     <Descriptions.Item label="员工人数">15,832人</Descriptions.Item>
                     <Descriptions.Item label="法人代表">张三</Descriptions.Item>
@@ -465,7 +405,7 @@ const StockDetail: React.FC = () => {
                       <Text>行业平均: </Text>
                       <Text strong>32.56</Text>
                     </div>
-                    {[stockData, ...relatedStocks].map(stock => (
+                    {[enhancedStockData, ...relatedStocks].map(stock => (
                       <div 
                         key={stock.code} 
                         style={{ 
@@ -481,7 +421,7 @@ const StockDetail: React.FC = () => {
                         <Progress 
                           percent={stock.pe ? (stock.pe / 100) * 100 : 0} 
                           showInfo={false} 
-                          strokeColor={stock.code === stockData.code ? "#1890ff" : "#d9d9d9"}
+                          strokeColor={stock.code === enhancedStockData.code ? "#1890ff" : "#d9d9d9"}
                           style={{ flex: 1, margin: '0 8px' }}
                         />
                         <Text style={{ width: '40px', textAlign: 'right' }}>{stock.pe?.toFixed(2) || '-'}</Text>
@@ -496,7 +436,7 @@ const StockDetail: React.FC = () => {
                       <Text>行业平均: </Text>
                       <Text strong>5.87</Text>
                     </div>
-                    {[stockData, ...relatedStocks].map(stock => (
+                    {[enhancedStockData, ...relatedStocks].map(stock => (
                       <div 
                         key={stock.code} 
                         style={{ 
@@ -512,7 +452,7 @@ const StockDetail: React.FC = () => {
                         <Progress 
                           percent={stock.pb ? (stock.pb / 15) * 100 : 0} 
                           showInfo={false} 
-                          strokeColor={stock.code === stockData.code ? "#1890ff" : "#d9d9d9"}
+                          strokeColor={stock.code === enhancedStockData.code ? "#1890ff" : "#d9d9d9"}
                           style={{ flex: 1, margin: '0 8px' }}
                         />
                         <Text style={{ width: '40px', textAlign: 'right' }}>{stock.pb?.toFixed(2) || '-'}</Text>
@@ -527,7 +467,7 @@ const StockDetail: React.FC = () => {
                       <Text>行业平均: </Text>
                       <Text strong>1,562.35亿</Text>
                     </div>
-                    {[stockData, ...relatedStocks].map(stock => (
+                    {[enhancedStockData, ...relatedStocks].map(stock => (
                       <div 
                         key={stock.code} 
                         style={{ 
@@ -543,7 +483,7 @@ const StockDetail: React.FC = () => {
                         <Progress 
                           percent={stock.market_cap ? Math.min((stock.market_cap / 2000000000000) * 100, 100) : 0} 
                           showInfo={false} 
-                          strokeColor={stock.code === stockData.code ? "#1890ff" : "#d9d9d9"}
+                          strokeColor={stock.code === enhancedStockData.code ? "#1890ff" : "#d9d9d9"}
                           style={{ flex: 1, margin: '0 8px' }}
                         />
                         <Text style={{ width: '60px', textAlign: 'right' }}>
@@ -593,6 +533,9 @@ const StockDetail: React.FC = () => {
           </TabPane>
         </Tabs>
       </Card>
+
+      {/* AI分析助手触发器 */}
+      <AIAssistantTrigger currentStock={stockData} position="bottom-right" />
     </div>
   );
 };
