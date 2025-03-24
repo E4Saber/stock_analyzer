@@ -1,5 +1,5 @@
 # app/external/yfinance_client.py
-from app.external.yfinance_api.stock_info_api import get_history, get_histories
+from app.external.yfinance_api.stock_api import get_history, get_histories
 
 import yfinance as yf
 import pprint
