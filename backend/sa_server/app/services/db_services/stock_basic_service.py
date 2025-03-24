@@ -2,7 +2,7 @@ import pandas as pd
 import datetime
 from typing import List, Dict, Any, Optional
 from app.data.db_modules.stock_basic import StockBasicData
-from app.schedule.tasks.tushare.stock_basic_info_task import get_stock_basic
+from app.services.tushare_services.stock_basic_info_task import get_stock_basic
 
 
 class StockBasicService:

@@ -1,0 +1,177 @@
+{
+    "query": "AAPL",
+    "quotes": [
+        {
+            "exchange": "NMS",
+            "shortname": "Apple Inc.",
+            "quoteType": "EQUITY",
+            "symbol": "AAPL",
+            "index": "quotes",
+            "score": 2580200.0,
+            "typeDisp": "Equity",
+            "longname": "Apple Inc.",
+            "exchDisp": "NASDAQ",
+            "sector": "Technology",
+            "sectorDisp": "Technology",
+            "industry": "Consumer Electronics",
+            "industryDisp": "Consumer Electronics",
+            "dispSecIndFlag": true,
+            "isYahooFinance": true
+        },
+        {
+            "exchange": "OPR",
+            "shortname": "AAPL Jan 2026 170.000 put",
+            "quoteType": "OPTION",
+            "symbol": "AAPL260116P00170000",
+            "index": "quotes",
+            "score": 20004.0,
+            "typeDisp": "Option",
+            "longname": "AAPL Jan 2026 170.000 put",
+            "exchDisp": "OPR",
+            "isYahooFinance": true
+        },
+        {
+            "exchange": "OPR",
+            "shortname": "AAPL Mar 2025 225.000 put",
+            "quoteType": "OPTION",
+            "symbol": "AAPL250321P00225000",
+            "index": "quotes",
+            "score": 20004.0,
+            "typeDisp": "Option",
+            "longname": "AAPL Mar 2025 225.000 put",
+            "exchDisp": "OPR",
+            "isYahooFinance": true
+        },
+        {
+            "exchange": "OPR",
+            "shortname": "AAPL Jan 2026 125.000 call",
+            "quoteType": "OPTION",
+            "symbol": "AAPL260116C00125000",
+            "index": "quotes",
+            "score": 20004.0,
+            "typeDisp": "Option",
+            "longname": "AAPL Jan 2026 125.000 call",
+            "exchDisp": "OPR",
+            "isYahooFinance": true
+        },
+        {
+            "exchange": "OPR",
+            "shortname": "AAPL Jun 2026 140.000 call",
+            "quoteType": "OPTION",
+            "symbol": "AAPL260618C00140000",
+            "index": "quotes",
+            "score": 20004.0,
+            "typeDisp": "Option",
+            "longname": "AAPL Jun 2026 140.000 call",
+            "exchDisp": "OPR",
+            "isYahooFinance": true
+        }
+    ],
+    "news": [
+        {
+            "uuid": "bcf9ed65-8865-3544-9934-6f92565d13a9",
+            "title": "Apple Stock Has a Growth Problem. Is It Really Worth Its Premium Valuation?",
+            "publisher": "Motley Fool",
+            "link": "https://finance.yahoo.com/m/bcf9ed65-8865-3544-9934-6f92565d13a9/apple-stock-has-a-growth.html",
+            "providerPublishTime": 1742805660,
+            "type": "STORY",
+            "thumbnail": {
+                "resolutions": [
+                    {
+                        "url": "https://s.yimg.com/uu/api/res/1.2/j5spkJOum8kXagNyXDRF4w--~B/aD0xNjIwO3c9Mjg4MDthcHBpZD15dGFjaHlvbg--/https://media.zenfs.com/en/motleyfool.com/26f9cb4358277271304516c2e7ad6286",
+                        "width": 2880,
+                        "height": 1620,
+                        "tag": "original"
+                    },
+                    {
+                        "url": "https://s.yimg.com/uu/api/res/1.2/jnwI1xGDf9JL9UfZXFoLlA--~B/Zmk9ZmlsbDtoPTE0MDtweW9mZj0wO3c9MTQwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/26f9cb4358277271304516c2e7ad6286",
+                        "width": 140,
+                        "height": 140,
+                        "tag": "140x140"
+                    }
+                ]
+            },
+            "relatedTickers": [
+                "AAPL"
+            ]
+        },
+        {
+            "uuid": "b0fa9498-ecb1-374c-97ad-73e96a106365",
+            "title": "Apple Inc. (AAPL): Own It, Don’t Trade It – Tune Out the Noise! – Jim Cramer",
+            "publisher": "Insider Monkey",
+            "link": "https://finance.yahoo.com/news/apple-inc-aapl-own-don-163850433.html",
+            "providerPublishTime": 1742747930,
+            "type": "STORY",
+            "thumbnail": {
+                "resolutions": [
+                    {
+                        "url": "https://s.yimg.com/uu/api/res/1.2/fTPNobtT0bdcSxj2xXAamw--~B/aD04MTY7dz0xNDU2O2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/insidermonkey.com/bd47dc2e86b4a3086f845d200d9daf1f",
+                        "width": 1456,
+                        "height": 816,
+                        "tag": "original"
+                    },
+                    {
+                        "url": "https://s.yimg.com/uu/api/res/1.2/nIyTyNRglKMNfFFMGli.7A--~B/Zmk9ZmlsbDtoPTE0MDtweW9mZj0wO3c9MTQwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/insidermonkey.com/bd47dc2e86b4a3086f845d200d9daf1f",
+                        "width": 140,
+                        "height": 140,
+                        "tag": "140x140"
+                    }
+                ]
+            },
+            "relatedTickers": [
+                "AAPL"
+            ]
+        },
+        {
+            "uuid": "62704226-d96f-3dc1-9a04-5e824d24492c",
+            "title": "Was Jim Cramer Right About Apple (AAPL)?",
+            "publisher": "Insider Monkey",
+            "link": "https://finance.yahoo.com/news/jim-cramer-apple-aapl-112015318.html",
+            "providerPublishTime": 1742728815,
+            "type": "STORY",
+            "thumbnail": {
+                "resolutions": [
+                    {
+                        "url": "https://s.yimg.com/uu/api/res/1.2/fTPNobtT0bdcSxj2xXAamw--~B/aD04MTY7dz0xNDU2O2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/insidermonkey.com/bd47dc2e86b4a3086f845d200d9daf1f",
+                        "width": 1456,
+                        "height": 816,
+                        "tag": "original"
+                    },
+                    {
+                        "url": "https://s.yimg.com/uu/api/res/1.2/nIyTyNRglKMNfFFMGli.7A--~B/Zmk9ZmlsbDtoPTE0MDtweW9mZj0wO3c9MTQwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/insidermonkey.com/bd47dc2e86b4a3086f845d200d9daf1f",
+                        "width": 140,
+                        "height": 140,
+                        "tag": "140x140"
+                    }
+                ]
+            },
+            "relatedTickers": [
+                "AAPL"
+            ]
+        }
+    ],
+    "lists": [],
+    "nav": [],
+    "research": [
+        {
+            "reportHeadline": "Apple: $500 Billion US Investment Is a Tariff-Avoiding Ploy That We Expect to Succeed",
+            "author": "William Kerwin",
+            "reportDate": 1741907515000,
+            "id": "MS_0P000000GY_AnalystReport_1741907515000",
+            "provider": "Morningstar"
+        },
+        {
+            "reportHeadline": "Apple: iPhone 16e Meets Our Expectations, and We See C1 Modem as Impressive",
+            "author": "William Kerwin",
+            "reportDate": 1739995445000,
+            "id": "MS_0P000000GY_AnalystReport_1739995445000",
+            "provider": "Morningstar"
+        },
+        {
+            "reportHeadline": "February Can Be a Tough Month",
+            "reportDate": 1738670405000,
+            "id": "ARGUS_42563_MarketOutlook_1738670405000",
+            "provider": "Argus"
+        }
+    ]
+}

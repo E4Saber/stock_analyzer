@@ -1,38 +1,15 @@
 import pandas as pd
 from typing import List, Type, Dict, Any
 from pydantic import TypeAdapter
-from app.data.ui_modules.global_index_data import GlobalIndexData
-from app.config.indices_config import GLOBAL_INDICES
-from app.services.yfinance_services import get_minimal_global_indices_tday
+from app.data.db_modules.index_data import IndexData
 
 
-def ensure_serializable(data):
-    """确保数据可以被序列化为JSON"""
-    if pd.isna(data):  # 处理NaN/None值
-        return None
-    elif isinstance(data, pd.Series):
-        return {k: None if pd.isna(v) else v for k, v in data.to_dict().items()}
-    elif isinstance(data, pd.DataFrame):
-        # 先将NaN转为None
-        df_copy = data.copy()
-        df_copy = df_copy.where(pd.notna(df_copy), None)
-        return df_copy.to_dict('records')
-    elif isinstance(data, dict):
-        return {k: ensure_serializable(v) for k, v in data.items()}
-    elif isinstance(data, list):
-        return [ensure_serializable(item) for item in data]
-    elif hasattr(data, 'item'):  # numpy 数据类型
-        return None if pd.isna(data.item()) else data.item()
-    else:
-        return data
-
-def tushare_data_to_cn_index_data(df: pd.DataFrame, model: Type) -> List:
-    """将DataFrame转换为模型实例列表"""
-    # 先将NaN转为None，确保JSON兼容
-    df_copy = df.where(pd.notna(df), None)
-    
+def tushare_data_to_index_data(df: pd.DataFrame, model: Type) -> List:
+    """
+    将DataFrame转换为模型实例列表
+    """
     # 将DataFrame转换为字典列表
-    records = df_copy.to_dict('records')
+    records = df.to_dict('records')
 
     # 再次检查并确保没有NaN值 (DataFrame.to_dict可能不会正确处理所有NaN)
     for record in records:
@@ -48,11 +25,12 @@ def tushare_data_to_cn_index_data(df: pd.DataFrame, model: Type) -> List:
     
     return index_data_list
 
-def yahoo_finance_data_to_global_index_data(
+
+def yahoo_finance_data_to_index_data(
     info: pd.DataFrame,
     code: str,
     name: str = None
-) -> List[GlobalIndexData]:
+) -> List[IndexData]:
     """
     将Yahoo Finance的DataFrame数据转换为单个GlobalIndexData实例
     只返回最新的一条记录(第二条)，但使用前一条记录(第一条)的收盘价作为pre_close
@@ -151,12 +129,12 @@ def yahoo_finance_data_to_global_index_data(
             record[key] = None
     
     # 使用TypeAdapter转换为模型实例
-    ta = TypeAdapter(List[GlobalIndexData])
+    ta = TypeAdapter(List[IndexData])
     model_instances = ta.validate_python([record])
     
     return model_instances
 
-def get_minimal_global_indices(indices_data: List[Dict[str, Any]]) -> List[GlobalIndexData]:
+def get_minimal_global_indices(indices_data: List[Dict[str, Any]]) -> List[IndexData]:
     """
     获取全球指数数据
     返回一个包含GlobalIndexData模型实例的列表
@@ -185,6 +163,7 @@ def get_minimal_global_indices(indices_data: List[Dict[str, Any]]) -> List[Globa
             print(f"警告: 记录格式不正确: {record}")
     
     return global_indices_data
+
 
 if __name__ == "__main__":
     data = get_minimal_global_indices()
