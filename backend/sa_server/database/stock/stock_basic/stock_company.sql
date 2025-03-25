@@ -22,6 +22,29 @@ CREATE TABLE stock_company (
     business_scope TEXT                    -- 经营范围
 );
 
+-- 为 stock_company 表添加表注释
+COMMENT ON TABLE stock_company IS '上市公司基本信息';
+
+-- 为 stock_company 表中的字段添加注释
+COMMENT ON COLUMN stock_company.ts_code IS '股票代码';
+COMMENT ON COLUMN stock_company.com_name IS '公司全称';
+COMMENT ON COLUMN stock_company.com_id IS '统一社会信用代码';
+COMMENT ON COLUMN stock_company.exchange IS '交易所代码';
+COMMENT ON COLUMN stock_company.chairman IS '法人代表/董事长';
+COMMENT ON COLUMN stock_company.manager IS '总经理';
+COMMENT ON COLUMN stock_company.secretary IS '董事会秘书';
+COMMENT ON COLUMN stock_company.reg_capital IS '注册资本';
+COMMENT ON COLUMN stock_company.setup_date IS '公司注册日期';
+COMMENT ON COLUMN stock_company.province IS '所在省份';
+COMMENT ON COLUMN stock_company.city IS '所在城市';
+COMMENT ON COLUMN stock_company.introduction IS '公司介绍';
+COMMENT ON COLUMN stock_company.website IS '公司主页';
+COMMENT ON COLUMN stock_company.email IS '电子邮件';
+COMMENT ON COLUMN stock_company.office IS '办公地址';
+COMMENT ON COLUMN stock_company.employees IS '员工人数';
+COMMENT ON COLUMN stock_company.main_business IS '主要业务及产品';
+COMMENT ON COLUMN stock_company.business_scope IS '经营范围';
+
 -- 添加外键约束
 ALTER TABLE stock_company
 ADD CONSTRAINT fk_stock_company_stock_basic

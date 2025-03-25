@@ -514,7 +514,7 @@ if __name__ == "__main__":
     print(software_industry.summary())
     
     # 将行业信息导出为 JSON
-    software_industry.to_json("software_industry.json")
+    # software_industry.to_json("software_industry.json")
     
     # 与另一个行业比较
     print("\n与互联网内容信息行业比较:")

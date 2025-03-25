@@ -20,6 +20,24 @@ CREATE TABLE stk_managers (
     UNIQUE (ts_code, name, begin_date)   -- 唯一约束
 );
 
+-- 添加表注释
+COMMENT ON TABLE stk_managers IS '上市公司管理层信息表';
+
+-- 添加字段注释
+COMMENT ON COLUMN stk_managers.id IS '自增主键';
+COMMENT ON COLUMN stk_managers.ts_code IS 'TS股票代码';
+COMMENT ON COLUMN stk_managers.ann_date IS '公告日期';
+COMMENT ON COLUMN stk_managers.name IS '姓名';
+COMMENT ON COLUMN stk_managers.gender IS '性别';
+COMMENT ON COLUMN stk_managers.lev IS '岗位类别';
+COMMENT ON COLUMN stk_managers.title IS '岗位';
+COMMENT ON COLUMN stk_managers.edu IS '学历';
+COMMENT ON COLUMN stk_managers.national IS '国籍';
+COMMENT ON COLUMN stk_managers.birthday IS '出生年月';
+COMMENT ON COLUMN stk_managers.begin_date IS '上任日期';
+COMMENT ON COLUMN stk_managers.end_date IS '离任日期';
+COMMENT ON COLUMN stk_managers.resume IS '个人简历';
+
 -- 添加外键约束
 ALTER TABLE stk_managers
 ADD CONSTRAINT fk_stk_managers_stock_basic

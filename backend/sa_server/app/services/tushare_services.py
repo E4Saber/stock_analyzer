@@ -1,9 +1,94 @@
+import asyncio
+from app.db.db import get_db
+from .db_services.stock_service.stock_basic.stock_basic_service import import_single_stock
+from .db_services.stock_service.stock_basic.stk_premarket_service import import_single_premarket
+from .db_services.stock_service.stock_basic.tarde_cal_service import import_exchange_calendar
+from .db_services.stock_service.stock_basic.namechange_service import import_stock_namechange
+from .db_services.stock_service.stock_basic.hs_const_service import import_sh_connect
+from .db_services.stock_service.stock_basic.stock_company_service import import_single_company
+from .db_services.stock_service.stock_basic.stk_managers_service import import_stock_managers
+from .db_services.stock_service.stock_basic.stk_rewards_service import import_stock_rewards
+from .db_services.stock_service.stock_basic.new_share_service import get_annual_ipo_stats
+from .db_services.stock_service.stock_basic.bak_basic_service import get_market_overview
 
+async def stock_basic_test():
+    db = await get_db()
+    try:
+        await import_single_stock(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
 
-# 获取昨日大盘指数
-# 获取今日大盘指数
+async def stk_premarket_test():
+    db = await get_db()
+    try:
+        await import_single_premarket(db, trade_date='20210930', ts_code='000001.SZ')
+    finally:
+        await db.close()
 
+async def trade_cal_test():
+    db = await get_db()
+    try:
+        await import_exchange_calendar(db, exchange='SSE', start_date='20210101', end_date='20210102')
+    finally:
+        await db.close()
 
+async def namechange_test():
+    db = await get_db()
+    try:
+        await import_stock_namechange(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
+async def hs_const_test():
+    db = await get_db()
+    try:
+        await import_sh_connect(db, is_new='1')
+    finally:
+        await db.close()
+
+async def stock_company_test():
+    db = await get_db()
+    try:
+        await import_single_company(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
+async def stk_managers_test():
+    db = await get_db()
+    try:
+        await import_stock_managers(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
+async def stk_rewards_test():
+    db = await get_db()
+    try:
+        await import_stock_rewards(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
+async def new_share_test():
+    db = await get_db()
+    try:
+        await get_annual_ipo_stats(db, year=2021)
+    finally:
+        await db.close()
+
+async def bak_basic_test():
+    db = await get_db()
+    try:
+        await get_market_overview(db, trade_date='20250317')
+    finally:
+        await db.close()
 
 if __name__ == "__main__":
-    print("获取昨日大盘指数")
+    # asyncio.run(stock_basic_test())
+    # asyncio.run(stk_premarket_test())
+    # asyncio.run(trade_cal_test())
+    # asyncio.run(namechange_test())
+    # asyncio.run(hs_const_test())
+    # asyncio.run(stock_company_test())
+    # asyncio.run(stk_managers_test())
+    # asyncio.run(stk_rewards_test())
+    # asyncio.run(new_share_test())
+    asyncio.run(bak_basic_test())

@@ -4,7 +4,7 @@
 CREATE TABLE tarde_cal (
     exchange VARCHAR(10) NOT NULL,       -- 交易所代码
     cal_date DATE NOT NULL,              -- 日历日期
-    is_open CHAR(1) NOT NULL,            -- 是否交易日
+    is_open SMALLINT NOT NULL,           -- 是否交易日
     pretrade_date DATE,                  -- 上一个交易日
     
     PRIMARY KEY (exchange, cal_date)     -- 复合主键

@@ -15,6 +15,19 @@ CREATE TABLE stk_rewards (
     UNIQUE (ts_code, name, end_date)   -- 唯一约束
 );
 
+-- 添加表注释
+COMMENT ON TABLE stk_rewards IS '上市公司管理层薪酬和持股信息';
+
+-- 添加字段注释
+COMMENT ON COLUMN stk_rewards.id IS '自增主键';
+COMMENT ON COLUMN stk_rewards.ts_code IS 'TS股票代码';
+COMMENT ON COLUMN stk_rewards.ann_date IS '公告日期';
+COMMENT ON COLUMN stk_rewards.end_date IS '截止日期';
+COMMENT ON COLUMN stk_rewards.name IS '姓名';
+COMMENT ON COLUMN stk_rewards.title IS '职务';
+COMMENT ON COLUMN stk_rewards.reward IS '报酬(万元)';
+COMMENT ON COLUMN stk_rewards.hold_vol IS '持股数(股)';
+
 -- 添加外键约束
 ALTER TABLE stk_rewards
 ADD CONSTRAINT fk_stk_rewards_stock_basic

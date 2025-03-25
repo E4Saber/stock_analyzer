@@ -30,6 +30,35 @@ CREATE TABLE bak_basic (
     PRIMARY KEY (trade_date, ts_code)     -- 复合主键
 );
 
+-- 添加表注释
+COMMENT ON TABLE bak_basic IS '股票历史（历史每天股票）';
+
+-- 添加字段注释
+COMMENT ON COLUMN bak_basic.trade_date IS '交易日期';
+COMMENT ON COLUMN bak_basic.ts_code IS 'TS股票代码';
+COMMENT ON COLUMN bak_basic.name IS '股票名称';
+COMMENT ON COLUMN bak_basic.industry IS '行业';
+COMMENT ON COLUMN bak_basic.area IS '地域';
+COMMENT ON COLUMN bak_basic.pe IS '市盈率（动）';
+COMMENT ON COLUMN bak_basic.float_share IS '流通股本（亿）';
+COMMENT ON COLUMN bak_basic.total_share IS '总股本（亿）';
+COMMENT ON COLUMN bak_basic.total_assets IS '总资产（亿）';
+COMMENT ON COLUMN bak_basic.liquid_assets IS '流动资产（亿）';
+COMMENT ON COLUMN bak_basic.fixed_assets IS '固定资产（亿）';
+COMMENT ON COLUMN bak_basic.reserved IS '公积金（元）';
+COMMENT ON COLUMN bak_basic.reserved_pershare IS '每股公积金（元/股）';
+COMMENT ON COLUMN bak_basic.eps IS '每股收益（元/股）';
+COMMENT ON COLUMN bak_basic.bvps IS '每股净资产（元/股）';
+COMMENT ON COLUMN bak_basic.pb IS '市净率';
+COMMENT ON COLUMN bak_basic.list_date IS '上市日期';
+COMMENT ON COLUMN bak_basic.undp IS '未分配利润（元）';
+COMMENT ON COLUMN bak_basic.per_undp IS '每股未分配利润（元/股）';
+COMMENT ON COLUMN bak_basic.rev_yoy IS '收入同比（%）';
+COMMENT ON COLUMN bak_basic.profit_yoy IS '利润同比（%）';
+COMMENT ON COLUMN bak_basic.gpr IS '毛利率（%）';
+COMMENT ON COLUMN bak_basic.npr IS '净利润率（%）';
+COMMENT ON COLUMN bak_basic.holder_num IS '股东人数';
+
 -- 添加外键约束
 ALTER TABLE bak_basic
 ADD CONSTRAINT fk_bak_basic_stock_basic

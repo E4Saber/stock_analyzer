@@ -19,6 +19,23 @@ CREATE TABLE new_share (
     FOREIGN KEY (ts_code) REFERENCES stock_basic(ts_code)
 );
 
+-- 添加表注释
+COMMENT ON TABLE new_share IS 'IPO新股发行信息';
+
+-- 添加字段注释
+COMMENT ON COLUMN new_share.ts_code IS 'TS股票代码';
+COMMENT ON COLUMN new_share.sub_code IS '申购代码';
+COMMENT ON COLUMN new_share.name IS '股票名称';
+COMMENT ON COLUMN new_share.ipo_date IS '上网发行日期';
+COMMENT ON COLUMN new_share.issue_date IS '上市日期';
+COMMENT ON COLUMN new_share.amount IS '发行总量（万股）';
+COMMENT ON COLUMN new_share.market_amount IS '上网发行总量（万股）';
+COMMENT ON COLUMN new_share.price IS '发行价格（元）';
+COMMENT ON COLUMN new_share.pe IS '市盈率';
+COMMENT ON COLUMN new_share.limit_amount IS '个人申购上限（万股）';
+COMMENT ON COLUMN new_share.funds IS '募集资金（亿元）';
+COMMENT ON COLUMN new_share.ballot IS '中签率';
+
 -- 添加索引
 CREATE INDEX idx_new_share_sub_code ON new_share(sub_code);
 CREATE INDEX idx_new_share_ipo_date ON new_share(ipo_date);

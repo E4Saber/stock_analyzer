@@ -533,7 +533,7 @@ if __name__ == "__main__":
     print(tech_sector.summary())
     
     # 将部门信息导出为 JSON
-    tech_sector.to_json("technology_sector.json")
+    # tech_sector.to_json("technology_sector.json")
     
     # 获取所有部门
     print("\n所有有效部门:")

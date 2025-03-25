@@ -325,4 +325,4 @@ if __name__ == "__main__":
     print(search.summary())
     
     # 导出为JSON
-    search.to_json("apple_search_results.json")
+    # search.to_json("apple_search_results.json")
