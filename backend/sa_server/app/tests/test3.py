@@ -6,12 +6,17 @@ from app.external.tushare_client import get_tushare_client
 
 warnings.filterwarnings('ignore')
 
-class CapitalFlowAnalyzer:
+class CapitalFlowCalculator:
+    """
+    资金流向计算器类
+    用于获取并计算沪深港通资金流向、外资持股等基础数据
+    """
     def __init__(self):
+        """初始化资金流向计算器"""
         self.pro = get_tushare_client()
         # 使用历史日期，避免使用未来日期导致数据为空
-        self.end_date = '20230331'  # 可调整为需要的结束日期
-        self.start_date = '20220401'  # 默认分析一年数据
+        self.end_date = '20240901'  # 可调整为需要的结束日期
+        self.start_date = '20250324'  # 默认分析一年数据
         
         # 存储各类数据
         self.hsgt_flow = None  # 沪深港通资金流向
@@ -19,16 +24,121 @@ class CapitalFlowAnalyzer:
         self.foreign_hold = None  # 外资持股
         self.margin_data = None  # 融资融券数据(作为本地资金参考)
         self.index_data = {}   # 指数数据
+        
+        # 调试模式，用于打印更多信息以便排查问题
+        self.debug_mode = True
+    
+    def set_date_range(self, start_date, end_date):
+        """设置日期范围"""
+        self.start_date = start_date
+        self.end_date = end_date
+        return self
     
     def fetch_all_data(self):
         """获取所有相关数据"""
-        print(f"分析日期范围: {self.start_date} 至 {self.end_date}")
+        print(f"获取日期范围: {self.start_date} 至 {self.end_date} 的资金流向数据")
         self._fetch_hsgt_flow()
         self._fetch_ggt_daily()
         self._fetch_foreign_investment()
         self._fetch_margin_data()
         self._fetch_index_data()
+        
+        # 打印数据汇总
+        self._print_data_summary()
+        
         return self
+    
+    def _print_data_summary(self):
+        """打印数据汇总信息"""
+        print("\n===== 资金流向数据汇总 =====")
+        
+        # 沪深港通资金流向汇总
+        if not self.hsgt_flow.empty:
+            north_sum = self.hsgt_flow['north_money'].sum()
+            north_avg = self.hsgt_flow['north_money'].mean()
+            south_sum = self.hsgt_flow['south_money'].sum()
+            south_avg = self.hsgt_flow['south_money'].mean()
+            
+            print("\n沪深港通资金流向:")
+            print(f"北向资金累计净流入: {north_sum:.2f}亿元")
+            print(f"北向资金日均净流入: {north_avg:.2f}亿元")
+            print(f"南向资金累计净流入: {south_sum:.2f}亿元")
+            print(f"南向资金日均净流入: {south_avg:.2f}亿元")
+            
+            # 流入/流出天数统计
+            north_inflow_days = (self.hsgt_flow['north_money'] > 0).sum()
+            north_outflow_days = (self.hsgt_flow['north_money'] < 0).sum()
+            south_inflow_days = (self.hsgt_flow['south_money'] > 0).sum()
+            south_outflow_days = (self.hsgt_flow['south_money'] < 0).sum()
+            
+            print(f"北向资金净流入天数: {north_inflow_days}天")
+            print(f"北向资金净流出天数: {north_outflow_days}天")
+            print(f"南向资金净流入天数: {south_inflow_days}天")
+            print(f"南向资金净流出天数: {south_outflow_days}天")
+        
+        # 港股通每日成交汇总
+        if not self.ggt_daily.empty:
+            buy_sum = self.ggt_daily['buy_amount'].sum()
+            sell_sum = self.ggt_daily['sell_amount'].sum()
+            net_flow = self.ggt_daily['net_flow'].sum()
+            
+            print("\n港股通成交汇总:")
+            print(f"总买入金额: {buy_sum:.2f}亿元")
+            print(f"总卖出金额: {sell_sum:.2f}亿元")
+            print(f"净买入金额: {net_flow:.2f}亿元")
+            
+            if 'buy_volume' in self.ggt_daily.columns and 'sell_volume' in self.ggt_daily.columns:
+                buy_vol = self.ggt_daily['buy_volume'].sum()
+                sell_vol = self.ggt_daily['sell_volume'].sum()
+                print(f"总买入量: {buy_vol:.2f}亿股")
+                print(f"总卖出量: {sell_vol:.2f}亿股")
+        
+        # 外资持股汇总
+        if not self.foreign_hold.empty:
+            print("\n外资持股汇总:")
+            if 'foreign_flow' in self.foreign_hold.columns:
+                foreign_sum = self.foreign_hold['foreign_flow'].sum()
+                foreign_avg = self.foreign_hold['foreign_flow'].mean()
+                print(f"外资累计净流入(估计): {foreign_sum:.2f}亿元")
+                print(f"外资日均净流入(估计): {foreign_avg:.2f}亿元")
+            elif 'hold_value' in self.foreign_hold.columns and len(self.foreign_hold) > 1:
+                first_hold = self.foreign_hold['hold_value'].iloc[0]
+                last_hold = self.foreign_hold['hold_value'].iloc[-1]
+                change = last_hold - first_hold
+                print(f"外资持股市值(期初): {first_hold:.2f}亿元")
+                print(f"外资持股市值(期末): {last_hold:.2f}亿元")
+                print(f"外资持股市值变化: {change:.2f}亿元")
+        
+        # 融资融券数据汇总
+        if not self.margin_data.empty:
+            print("\n融资融券数据汇总:")
+            rzye_first = self.margin_data['rzye'].iloc[0]
+            rzye_last = self.margin_data['rzye'].iloc[-1]
+            rzye_change = rzye_last - rzye_first
+            
+            print(f"融资余额(期初): {rzye_first:.2f}亿元")
+            print(f"融资余额(期末): {rzye_last:.2f}亿元")
+            print(f"融资余额变化: {rzye_change:.2f}亿元")
+        
+        # 指数数据汇总
+        if self.index_data:
+            print("\n指数表现汇总:")
+            for code, data in self.index_data.items():
+                name = self._get_index_name(code)
+                if not data.empty:
+                    first_close = data['close'].iloc[0]
+                    last_close = data['close'].iloc[-1]
+                    change_pct = (last_close / first_close - 1) * 100
+                    print(f"{name} 变化: {change_pct:.2f}%，收盘价: {first_close:.2f} -> {last_close:.2f}")
+    
+    def _get_index_name(self, code):
+        """根据指数代码获取指数名称"""
+        index_names = {
+            '000001.SH': '上证指数',
+            'HSI.HK': '恒生指数',
+            '399001.SZ': '深证成指'
+        }
+        return index_names.get(code, code)
     
     def _fetch_hsgt_flow(self):
         """获取沪深港通资金流向"""
@@ -77,7 +187,6 @@ class CapitalFlowAnalyzer:
         try:
             print("\n正在获取外资持股数据...")
             # 获取特定日期的外资持股数据
-            # 因为外资持股数据通常按季度或月度发布，我们选择几个关键日期点
             sample_dates = []
             
             # 尝试获取季度末数据
@@ -101,29 +210,62 @@ class CapitalFlowAnalyzer:
             all_foreign_data = []
             for date in sample_dates:
                 try:
-                    # 尝试使用 Tushare 的 QFII持股 API (如果可用)
-                    foreign_data = self.pro.query('qfii_hold', trade_date=date)
+                    # 尝试不同的API获取外资持股数据
+                    foreign_data = pd.DataFrame()
+                    api_tried = []
+                    
+                    # 尝试使用qfii_hold接口
+                    try:
+                        foreign_data = self.pro.query('qfii_hold', trade_date=date)
+                        api_tried.append('qfii_hold')
+                    except Exception as e:
+                        if self.debug_mode:
+                            print(f"获取 {date} 的qfii_hold数据出错: {e}")
+                    
+                    # 如果qfii_hold失败，尝试qfii_shareholding接口
+                    if foreign_data.empty:
+                        try:
+                            foreign_data = self.pro.query('qfii_shareholding', trade_date=date)
+                            api_tried.append('qfii_shareholding')
+                        except Exception as e:
+                            if self.debug_mode:
+                                print(f"获取 {date} 的qfii_shareholding数据出错: {e}")
+                    
+                    # 如果有其他可能的API，继续尝试
+                    if foreign_data.empty:
+                        try:
+                            foreign_data = self.pro.query('foreign_holdings', trade_date=date)
+                            api_tried.append('foreign_holdings')
+                        except Exception as e:
+                            if self.debug_mode:
+                                print(f"获取 {date} 的foreign_holdings数据出错: {e}")
+                    
                     if not foreign_data.empty:
                         foreign_data['trade_date'] = pd.to_datetime(date)
                         all_foreign_data.append(foreign_data)
-                        print(f"获取到 {date} 的外资持股数据 ({len(foreign_data)}条)")
+                        print(f"获取到 {date} 的外资持股数据 ({len(foreign_data)}条), 使用接口: {', '.join(api_tried)}")
+                    else:
+                        print(f"未能获取到 {date} 的外资持股数据，尝试了接口: {', '.join(api_tried)}")
                 except Exception as e:
                     print(f"获取 {date} 的外资持股数据出错: {e}")
             
             if all_foreign_data:
                 self.foreign_hold = pd.concat(all_foreign_data, ignore_index=True)
-                # 计算外资持股市值总和
-                self.foreign_hold['hold_value'] = self.foreign_hold['hold_vol'] * self.foreign_hold['price']
-                self.foreign_hold = self.foreign_hold.groupby('trade_date').agg({'hold_value': 'sum'}).reset_index()
-                self.foreign_hold['hold_value'] = self.foreign_hold['hold_value'] / 100000000  # 转换为亿元
-                print(f"合并后获取到 {len(self.foreign_hold)} 个日期点的外资持股数据")
+                # 根据获取到的数据结构进行处理
+                if 'hold_vol' in self.foreign_hold.columns and 'price' in self.foreign_hold.columns:
+                    # 计算外资持股市值总和
+                    self.foreign_hold['hold_value'] = self.foreign_hold['hold_vol'] * self.foreign_hold['price']
+                    self.foreign_hold = self.foreign_hold.groupby('trade_date').agg({'hold_value': 'sum'}).reset_index()
+                    self.foreign_hold['hold_value'] = self.foreign_hold['hold_value'] / 100000000  # 转换为亿元
+                    print(f"合并后获取到 {len(self.foreign_hold)} 个日期点的外资持股数据")
+                else:
+                    print("外资持股数据列名与预期不符，使用可用列进行计算")
             else:
                 print("未获取到任何外资持股数据，将使用替代方法估算")
                 
                 # 如果无法获取QFII数据，使用北向资金作为外资流入的替代指标
                 if not self.hsgt_flow.empty:
                     # 假设外资流入与北向资金有一定关联，但外资更加分散
-                    # 根据一般经验，我们假设外资流入约为北向资金的60-70%
                     self.foreign_hold = self.hsgt_flow[['trade_date']].copy()
                     self.foreign_hold['foreign_flow'] = self.hsgt_flow['north_money'] * 0.65
                     self.foreign_hold['foreign_flow_cumsum'] = self.foreign_hold['foreign_flow'].cumsum()
@@ -160,12 +302,14 @@ class CapitalFlowAnalyzer:
         """获取相关指数数据"""
         indices = {
             '000001.SH': '上证指数',
-            'HSI.HK': '恒生指数'
+            'HSI.HK': '恒生指数',
+            '399001.SZ': '深证成指'
         }
         
         print("\n正在获取相关指数行情数据...")
         for code, name in indices.items():
             try:
+                # 尝试获取指数数据
                 index_data = self.pro.index_daily(ts_code=code, start_date=self.start_date, end_date=self.end_date)
                 if not index_data.empty:
                     # 格式化和处理数据
@@ -176,447 +320,116 @@ class CapitalFlowAnalyzer:
                     self.index_data[code] = index_data
                     print(f"获取到 {name} ({len(index_data)}条记录)")
                 else:
-                    print(f"未获取到 {name} 数据")
+                    print(f"未获取到 {name} 数据，尝试备选方法...")
+                    
+                    # 尝试备选方法获取恒生指数
+                    if code == 'HSI.HK':
+                        try:
+                            # 尝试使用港股指数API
+                            alt_data = self.pro.hk_index_daily(ts_code=code, start_date=self.start_date, end_date=self.end_date)
+                            if not alt_data.empty:
+                                alt_data = alt_data.sort_values('trade_date')
+                                alt_data['trade_date'] = pd.to_datetime(alt_data['trade_date'])
+                                alt_data['pct_change'] = alt_data['close'].pct_change()
+                                self.index_data[code] = alt_data
+                                print(f"使用备选API获取到 {name} ({len(alt_data)}条记录)")
+                            else:
+                                print(f"备选方法仍未获取到 {name} 数据")
+                        except Exception as e:
+                            print(f"备选方法获取 {name} 出错: {e}")
             except Exception as e:
                 print(f"获取 {name} 数据出错: {e}")
+                
+                # 对于恒生指数，尝试备选方法
+                if code == 'HSI.HK':
+                    try:
+                        alt_data = self.pro.hk_index_daily(ts_code=code, start_date=self.start_date, end_date=self.end_date)
+                        if not alt_data.empty:
+                            alt_data = alt_data.sort_values('trade_date')
+                            alt_data['trade_date'] = pd.to_datetime(alt_data['trade_date'])
+                            alt_data['pct_change'] = alt_data['close'].pct_change()
+                            self.index_data[code] = alt_data
+                            print(f"使用备选API获取到 {name} ({len(alt_data)}条记录)")
+                    except Exception as e:
+                        print(f"备选方法获取 {name} 出错: {e}")
     
-    def analyze_fund_proportions(self):
-        """分析南向资金和外资的比例"""
-        print("\n===== 南向资金和外资比例分析 =====")
+    def export_data(self, filename=None):
+        """导出数据到Excel文件"""
+        if filename is None:
+            filename = f"capital_flow_{self.start_date}_to_{self.end_date}.xlsx"
         
-        # 准备数据
-        has_south_data = not self.hsgt_flow.empty
-        has_foreign_data = not self.foreign_hold.empty
-        has_margin_data = not self.margin_data.empty
-        
-        if not has_south_data and not has_foreign_data:
-            print("没有足够的数据进行南向资金和外资比例分析")
-            return self
-        
-        # 1. 分析南向资金和外资的累计流入
-        print("\n累计资金流入比较:")
-        
-        if has_south_data:
-            south_total = self.hsgt_flow['south_money'].sum()
-            print(f"南向资金累计净流入: {south_total:.2f}亿元")
-        
-        if has_foreign_data and 'foreign_flow' in self.foreign_hold.columns:
-            foreign_total = self.foreign_hold['foreign_flow'].sum()
-            print(f"外资累计净流入(估计): {foreign_total:.2f}亿元")
-        elif has_foreign_data and 'hold_value' in self.foreign_hold.columns:
-            # 如果只有持仓数据，计算持仓变化
-            if len(self.foreign_hold) > 1:
-                foreign_change = self.foreign_hold['hold_value'].iloc[-1] - self.foreign_hold['hold_value'].iloc[0]
-                print(f"外资持股市值变化: {foreign_change:.2f}亿元")
-            else:
-                print(f"外资总持股市值: {self.foreign_hold['hold_value'].iloc[0]:.2f}亿元")
-        
-        # 2. 计算南向资金与外资的比例
-        if has_south_data and has_foreign_data and 'foreign_flow' in self.foreign_hold.columns:
-            south_total = self.hsgt_flow['south_money'].sum()
-            foreign_total = self.foreign_hold['foreign_flow'].sum()
-            
-            if south_total != 0 and foreign_total != 0:
-                if south_total > 0 and foreign_total > 0:
-                    # 两者都是正的，计算比例
-                    ratio = south_total / foreign_total
-                    print(f"\n南向资金与外资流入比例: {ratio:.2f} (南向资金 / 外资)")
-                    if ratio > 1:
-                        print(f"南向资金流入是外资流入的 {ratio:.2f} 倍")
-                    else:
-                        print(f"外资流入是南向资金流入的 {1/ratio:.2f} 倍")
-                elif south_total < 0 and foreign_total < 0:
-                    # 两者都是负的，计算流出比例
-                    ratio = abs(south_total) / abs(foreign_total)
-                    print(f"\n南向资金与外资流出比例: {ratio:.2f} (南向资金 / 外资)")
-                    if ratio > 1:
-                        print(f"南向资金流出是外资流出的 {ratio:.2f} 倍")
-                    else:
-                        print(f"外资流出是南向资金流出的 {1/ratio:.2f} 倍")
-                else:
-                    # 一正一负
-                    print("\n南向资金和外资流向相反")
-                    if south_total > 0:
-                        print(f"南向资金净流入 {south_total:.2f}亿元，而外资净流出 {abs(foreign_total):.2f}亿元")
-                    else:
-                        print(f"南向资金净流出 {abs(south_total):.2f}亿元，而外资净流入 {foreign_total:.2f}亿元")
-        
-        # 3. 分析本地资金(融资余额变化)与外资和南向资金的对比
-        if has_margin_data and (has_south_data or has_foreign_data):
-            margin_change = self.margin_data['rzye_change'].sum()
-            print(f"\n本地融资余额变化: {margin_change:.2f}亿元")
-            
-            if has_south_data:
-                south_total = self.hsgt_flow['south_money'].sum()
-                if margin_change != 0 and south_total != 0:
-                    local_south_ratio = abs(margin_change) / abs(south_total)
-                    print(f"本地融资余额变化与南向资金的比例: {local_south_ratio:.2f}")
-            
-            if has_foreign_data and 'foreign_flow' in self.foreign_hold.columns:
-                foreign_total = self.foreign_hold['foreign_flow'].sum()
-                if margin_change != 0 and foreign_total != 0:
-                    local_foreign_ratio = abs(margin_change) / abs(foreign_total)
-                    print(f"本地融资余额变化与外资的比例: {local_foreign_ratio:.2f}")
-        
-        # 4. 分析三者的相对贡献
-        if has_south_data and has_foreign_data and has_margin_data and 'foreign_flow' in self.foreign_hold.columns:
-            south_total = self.hsgt_flow['south_money'].sum()
-            foreign_total = self.foreign_hold['foreign_flow'].sum()
-            margin_change = self.margin_data['rzye_change'].sum()
-            
-            total_fund = abs(south_total) + abs(foreign_total) + abs(margin_change)
-            if total_fund > 0:
-                south_pct = abs(south_total) / total_fund * 100
-                foreign_pct = abs(foreign_total) / total_fund * 100
-                margin_pct = abs(margin_change) / total_fund * 100
+        try:
+            with pd.ExcelWriter(filename) as writer:
+                # 导出沪深港通资金流向
+                if not self.hsgt_flow.empty:
+                    self.hsgt_flow.to_excel(writer, sheet_name='沪深港通资金流向', index=False)
                 
-                print("\n各类资金占比分析:")
-                print(f"南向资金占比: {south_pct:.2f}%")
-                print(f"外资占比: {foreign_pct:.2f}%")
-                print(f"本地融资余额变化占比: {margin_pct:.2f}%")
+                # 导出港股通每日成交
+                if not self.ggt_daily.empty:
+                    self.ggt_daily.to_excel(writer, sheet_name='港股通每日成交', index=False)
                 
-                # 确定最主要的资金来源
-                max_pct = max(south_pct, foreign_pct, margin_pct)
-                if max_pct == south_pct:
-                    print("在观察期内，南向资金是最主要的资金流向")
-                elif max_pct == foreign_pct:
-                    print("在观察期内，外资是最主要的资金流向")
-                else:
-                    print("在观察期内，本地融资余额变化是最主要的资金流向")
-        
-        # 5. 分析最近趋势
-        if has_south_data and has_foreign_data and 'foreign_flow' in self.foreign_hold.columns:
-            # 确保外资数据和南向资金数据在同一时间点上
-            if len(self.hsgt_flow) >= 10 and len(self.foreign_hold) >= 10:
-                # 取南向资金最近10天数据
-                recent_south = self.hsgt_flow.tail(10)['south_money'].sum()
-                # 创建外资日期索引用于匹配
-                foreign_dates = self.foreign_hold['trade_date'].tolist()
-                # 筛选出最近10天在外资日期列表中的南向资金数据
-                recent_south_foreign_dates = self.hsgt_flow[self.hsgt_flow['trade_date'].isin(foreign_dates)].tail(10)
+                # 导出外资持股
+                if not self.foreign_hold.empty:
+                    self.foreign_hold.to_excel(writer, sheet_name='外资持股', index=False)
                 
-                if not recent_south_foreign_dates.empty:
-                    recent_south_matched = recent_south_foreign_dates['south_money'].sum()
-                    recent_foreign = self.foreign_hold.tail(len(recent_south_foreign_dates))['foreign_flow'].sum()
-                    
-                    print("\n最近趋势比较:")
-                    print(f"南向资金最近流入: {recent_south:.2f}亿元")
-                    print(f"外资最近流入(估计): {recent_foreign:.2f}亿元")
-                    
-                    if recent_south_matched != 0 and recent_foreign != 0:
-                        # 计算最近的比例变化
-                        recent_ratio = abs(recent_south_matched) / abs(recent_foreign)
-                        print(f"最近南向资金与外资比例: {recent_ratio:.2f}")
-                        
-                        # 判断趋势变化
-                        south_total = self.hsgt_flow['south_money'].sum()
-                        foreign_total = self.foreign_hold['foreign_flow'].sum()
-                        if south_total != 0 and foreign_total != 0:
-                            overall_ratio = abs(south_total) / abs(foreign_total)
-                            ratio_change = recent_ratio - overall_ratio
-                            
-                            if abs(ratio_change) > 0.2:  # 至少20%的变化才有意义
-                                if ratio_change > 0:
-                                    print("近期南向资金相对于外资的重要性正在增加")
-                                else:
-                                    print("近期外资相对于南向资金的重要性正在增加")
-                            else:
-                                print("近期南向资金与外资的相对重要性保持稳定")
-        
-        return self
+                # 导出融资融券数据
+                if not self.margin_data.empty:
+                    self.margin_data.to_excel(writer, sheet_name='融资融券数据', index=False)
+                
+                # 导出指数数据
+                for code, data in self.index_data.items():
+                    if not data.empty:
+                        name = self._get_index_name(code)
+                        data.to_excel(writer, sheet_name=f'指数_{name}', index=False)
+            
+            print(f"\n数据已成功导出到文件: {filename}")
+            return True
+        except Exception as e:
+            print(f"导出数据到Excel出错: {e}")
+            return False
     
-    def analyze_hk_market_detail(self):
-        """详细分析港股市场资金流入情况"""
-        print("\n===== 港股市场资金流入详细分析 =====")
+    def get_monthly_summary(self):
+        """获取月度资金流向汇总"""
+        print("\n===== 月度资金流向汇总 =====")
         
-        # 分析南向资金流入港股的特点
+        # 按月汇总沪深港通资金流向
         if not self.hsgt_flow.empty:
-            # 南向资金总体分析
-            south_total = self.hsgt_flow['south_money'].sum()
-            south_avg = self.hsgt_flow['south_money'].mean()
+            # 创建月份列
+            self.hsgt_flow['year_month'] = self.hsgt_flow['trade_date'].dt.strftime('%Y-%m')
             
-            print("\n南向资金流入港股分析:")
-            print(f"期间总净流入: {south_total:.2f}亿元")
-            print(f"日均净流入: {south_avg:.2f}亿元")
+            # 按月汇总
+            monthly_hsgt = self.hsgt_flow.groupby('year_month').agg({
+                'north_money': 'sum',
+                'south_money': 'sum'
+            }).reset_index()
             
-            # 计算持续流入/流出天数
-            inflow_days = (self.hsgt_flow['south_money'] > 0).sum()
-            outflow_days = (self.hsgt_flow['south_money'] < 0).sum()
-            total_days = len(self.hsgt_flow)
-            
-            print(f"净流入天数: {inflow_days} ({inflow_days/total_days*100:.1f}%)")
-            print(f"净流出天数: {outflow_days} ({outflow_days/total_days*100:.1f}%)")
-            
-            # 计算最大连续流入/流出天数
-            south_sign = np.sign(self.hsgt_flow['south_money'])
-            count = 1
-            max_inflow_streak = 0
-            max_outflow_streak = 0
-            current_streak = 0
-            current_sign = 0
-            
-            for sign in south_sign:
-                if sign == current_sign:
-                    current_streak += 1
-                else:
-                    if current_sign > 0 and current_streak > max_inflow_streak:
-                        max_inflow_streak = current_streak
-                    elif current_sign < 0 and current_streak > max_outflow_streak:
-                        max_outflow_streak = current_streak
-                    current_streak = 1
-                    current_sign = sign
-            
-            # 检查最后一个连续序列
-            if current_sign > 0 and current_streak > max_inflow_streak:
-                max_inflow_streak = current_streak
-            elif current_sign < 0 and current_streak > max_outflow_streak:
-                max_outflow_streak = current_streak
-            
-            print(f"最大连续净流入天数: {max_inflow_streak}")
-            print(f"最大连续净流出天数: {max_outflow_streak}")
+            print("\n月度沪深港通资金流向:")
+            for _, row in monthly_hsgt.iterrows():
+                print(f"{row['year_month']}  北向: {row['north_money']:.2f}亿元  南向: {row['south_money']:.2f}亿元")
         
-        # 分析港股通详细买卖情况
-        if not self.ggt_daily.empty:
-            print("\n港股通成交分析:")
-            total_buy = self.ggt_daily['buy_amount'].sum()
-            total_sell = self.ggt_daily['sell_amount'].sum()
-            total_volume = (self.ggt_daily['buy_volume'].sum() + self.ggt_daily['sell_volume'].sum()) / 2
+        # 按月汇总外资流入
+        if not self.foreign_hold.empty and 'foreign_flow' in self.foreign_hold.columns:
+            # 创建月份列
+            self.foreign_hold['year_month'] = self.foreign_hold['trade_date'].dt.strftime('%Y-%m')
             
-            print(f"总买入: {total_buy:.2f}亿元")
-            print(f"总卖出: {total_sell:.2f}亿元")
-            print(f"净买入: {total_buy - total_sell:.2f}亿元")
-            print(f"总成交量: {total_volume:.2f}亿股")
-            print(f"平均成交价: {(total_buy + total_sell) / (2 * total_volume):.2f}元/股")
+            # 按月汇总
+            monthly_foreign = self.foreign_hold.groupby('year_month').agg({
+                'foreign_flow': 'sum'
+            }).reset_index()
             
-            # 分析买卖活跃度
-            if total_buy > 0 and total_sell > 0:
-                buy_sell_ratio = total_buy / total_sell
-                print(f"买卖比: {buy_sell_ratio:.2f}")
-                
-                if buy_sell_ratio > 1.2:
-                    print("买入意愿明显强于卖出意愿")
-                elif buy_sell_ratio < 0.8:
-                    print("卖出意愿明显强于买入意愿")
-                else:
-                    print("买卖意愿较为平衡")
-        
-        # 分析港股通与外资的共同影响
-        if not self.ggt_daily.empty and not self.foreign_hold.empty and 'foreign_flow' in self.foreign_hold.columns:
-            # 尝试合并数据并分析
-            try:
-                combined_dates = set(self.ggt_daily['trade_date']).intersection(set(self.foreign_hold['trade_date']))
-                if combined_dates:
-                    filtered_ggt = self.ggt_daily[self.ggt_daily['trade_date'].isin(combined_dates)]
-                    filtered_foreign = self.foreign_hold[self.foreign_hold['trade_date'].isin(combined_dates)]
-                    
-                    # 确保日期匹配并合并
-                    merged_data = pd.merge(
-                        filtered_ggt[['trade_date', 'net_flow']], 
-                        filtered_foreign[['trade_date', 'foreign_flow']],
-                        on='trade_date', how='inner'
-                    )
-                    
-                    if not merged_data.empty:
-                        # 计算南向资金和外资的相关性
-                        corr = merged_data['net_flow'].corr(merged_data['foreign_flow'])
-                        print(f"\n南向资金与外资流向相关系数: {corr:.4f}")
-                        
-                        if abs(corr) > 0.5:
-                            print("南向资金与外资流向具有较强的相关性")
-                            if corr > 0:
-                                print("两者趋势基本一致，可能反映共同市场看法")
-                            else:
-                                print("两者趋势基本相反，可能代表不同投资策略")
-                        elif abs(corr) > 0.3:
-                            print("南向资金与外资流向具有中等相关性")
-                        else:
-                            print("南向资金与外资流向相关性较弱，可能受不同因素驱动")
-                        
-                        # 计算南向资金和外资在港股市场的综合影响
-                        total_impact = merged_data['net_flow'].sum() + merged_data['foreign_flow'].sum()
-                        print(f"南向资金和外资对港股的综合影响: {total_impact:.2f}亿元")
-                        
-                        # 分析两者对港股的相对贡献
-                        ggt_contribution = merged_data['net_flow'].sum() / abs(total_impact) * 100
-                        foreign_contribution = merged_data['foreign_flow'].sum() / abs(total_impact) * 100
-                        
-                        print(f"南向资金贡献: {ggt_contribution:.2f}%")
-                        print(f"外资贡献: {foreign_contribution:.2f}%")
-                        
-                        if abs(ggt_contribution) > abs(foreign_contribution):
-                            print("南向资金对港股市场的影响更为显著")
-                        else:
-                            print("外资对港股市场的影响更为显著")
-            except Exception as e:
-                print(f"分析南向资金与外资共同影响时出错: {e}")
-        
-        # 分析港股市场表现与资金流向的关系
-        if not self.hsgt_flow.empty and 'HSI.HK' in self.index_data:
-            try:
-                # 合并数据
-                hsi_data = self.index_data['HSI.HK']
-                combined_data = pd.merge(
-                    self.hsgt_flow[['trade_date', 'south_money']], 
-                    hsi_data[['trade_date', 'pct_change']],
-                    on='trade_date', how='inner'
-                )
-                
-                if not combined_data.empty:
-                    # 计算相关系数
-                    corr = combined_data['south_money'].corr(combined_data['pct_change'])
-                    print(f"\n南向资金与恒生指数涨跌相关系数: {corr:.4f}")
-                    
-                    if abs(corr) > 0.5:
-                        print(f"南向资金与恒生指数涨跌具有较强的{('正相关' if corr > 0 else '负相关')}关系")
-                    elif abs(corr) > 0.3:
-                        print(f"南向资金与恒生指数涨跌具有中等{('正相关' if corr > 0 else '负相关')}关系")
-                    else:
-                        print("南向资金与恒生指数涨跌相关性较弱")
-                    
-                    # 分析滞后效应
-                    for lag in [1, 3, 5]:
-                        combined_data[f'south_money_lag{lag}'] = combined_data['south_money'].shift(lag)
-                        lag_corr = combined_data[f'south_money_lag{lag}'].corr(combined_data['pct_change'])
-                        print(f"南向资金滞后{lag}日与恒生指数涨跌相关系数: {lag_corr:.4f}")
-                        
-                        if abs(lag_corr) > abs(corr) and abs(lag_corr) > 0.3:
-                            print(f"南向资金对恒生指数存在{lag}日的滞后效应")
-            except Exception as e:
-                print(f"分析南向资金与恒生指数关系时出错: {e}")
+            print("\n月度外资资金流向(估计):")
+            for _, row in monthly_foreign.iterrows():
+                print(f"{row['year_month']}  外资: {row['foreign_flow']:.2f}亿元")
         
         return self
     
-    def generate_summary_report(self):
-        """生成综合分析报告"""
-        print("\n========== 港股资金流向综合分析报告 ==========")
-        
-        # 汇总数据准备
-        has_south_data = not self.hsgt_flow.empty
-        has_ggt_data = not self.ggt_daily.empty
-        has_foreign_data = not self.foreign_hold.empty
-        has_hsi_data = 'HSI.HK' in self.index_data
-        
-        if not has_south_data and not has_ggt_data and not has_foreign_data:
-            print("没有足够的数据生成报告")
-            return self
-        
-        # 报告概览
-        print(f"\n分析期间: {self.start_date} 至 {self.end_date}")
-        
-        # 1. 资金流向总结
-        print("\n资金流向总结:")
-        total_flows = {}
-        
-        if has_south_data:
-            south_total = self.hsgt_flow['south_money'].sum()
-            total_flows['南向资金'] = south_total
-            print(f"南向资金累计净流入: {south_total:.2f}亿元")
-        
-        if has_foreign_data and 'foreign_flow' in self.foreign_hold.columns:
-            foreign_total = self.foreign_hold['foreign_flow'].sum()
-            total_flows['外资'] = foreign_total
-            print(f"外资累计净流入(估计): {foreign_total:.2f}亿元")
-        
-        if has_ggt_data:
-            net_total = self.ggt_daily['net_flow'].sum()
-            total_flows['港股通净流入'] = net_total
-            print(f"港股通累计净流入: {net_total:.2f}亿元")
-        
-        # 2. 资金比例分析
-        if len(total_flows) > 1:
-            print("\n资金来源比例:")
-            total_abs_flow = sum(abs(v) for v in total_flows.values())
-            for source, amount in total_flows.items():
-                percentage = abs(amount) / total_abs_flow * 100
-                print(f"{source}: {percentage:.2f}%")
-        
-        # 3. 市场影响分析
-        if has_hsi_data and has_south_data:
-            hsi_change = (self.index_data['HSI.HK']['close'].iloc[-1] / self.index_data['HSI.HK']['close'].iloc[0] - 1) * 100
-            print(f"\n期间恒生指数变化: {hsi_change:.2f}%")
-            
-            # 计算相关性
-            merged_data = pd.merge(
-                self.hsgt_flow[['trade_date', 'south_money']], 
-                self.index_data['HSI.HK'][['trade_date', 'pct_change']],
-                on='trade_date', how='inner'
-            )
-            
-            if not merged_data.empty:
-                corr = merged_data['south_money'].corr(merged_data['pct_change'])
-                print(f"南向资金与恒生指数相关性: {corr:.4f}")
-        
-        # 4. 南向资金与外资对比
-        if has_south_data and has_foreign_data and 'foreign_flow' in self.foreign_hold.columns:
-            south_total = total_flows.get('南向资金', 0)
-            foreign_total = total_flows.get('外资', 0)
-            
-            if south_total != 0 and foreign_total != 0:
-                ratio = abs(south_total) / abs(foreign_total)
-                print(f"\n南向资金与外资比例: {ratio:.2f}")
-                
-                if south_total > 0 and foreign_total > 0:
-                    print("南向资金和外资均呈净流入趋势")
-                elif south_total < 0 and foreign_total < 0:
-                    print("南向资金和外资均呈净流出趋势")
-                else:
-                    print("南向资金和外资流向相反")
-        
-        # 5. 结论与建议
-        print("\n结论与建议:")
-        
-        # 基于资金流向的市场判断
-        if has_south_data:
-            south_total = total_flows.get('南向资金', 0)
-            recent_south = self.hsgt_flow.tail(10)['south_money'].sum() if len(self.hsgt_flow) >= 10 else None
-            
-            # 分析整体趋势
-            if south_total > 0:
-                print("- 南向资金整体呈净流入趋势，港股市场基本面较为稳健")
-            else:
-                print("- 南向资金整体呈净流出趋势，港股市场可能面临压力")
-            
-            # 分析最近趋势
-            if recent_south is not None:
-                if recent_south > 0 and south_total > 0:
-                    print("- 近期南向资金持续净流入，保持看好港股市场")
-                elif recent_south > 0 and south_total < 0:
-                    print("- 南向资金近期由净流出转为净流入，港股市场情绪可能正在改善")
-                elif recent_south < 0 and south_total > 0:
-                    print("- 南向资金近期由净流入转为净流出，需警惕港股市场走势变化")
-                else:
-                    print("- 南向资金持续净流出，对港股市场保持谨慎")
-        
-        if has_foreign_data and 'foreign_flow' in self.foreign_hold.columns:
-            foreign_total = total_flows.get('外资', 0)
-            if foreign_total > 0:
-                print("- 外资整体呈净流入趋势，国际资金对港股市场态度偏积极")
-            else:
-                print("- 外资整体呈净流出趋势，国际资金对港股市场态度偏谨慎")
-        
-        # 南向资金与外资比较
-        if has_south_data and has_foreign_data and 'foreign_flow' in self.foreign_hold.columns:
-            south_total = total_flows.get('南向资金', 0)
-            foreign_total = total_flows.get('外资', 0)
-            
-            if (south_total > 0 and foreign_total < 0) or (south_total < 0 and foreign_total > 0):
-                print("- 南向资金与外资流向不一致，可能反映内地与国际投资者对港股市场的看法存在分歧")
-            elif south_total > 0 and foreign_total > 0:
-                print("- 南向资金与外资均呈净流入，反映内地和国际投资者对港股市场均持积极态度")
-            else:
-                print("- 南向资金与外资均呈净流出，反映内地和国际投资者对港股市场均持谨慎态度")
-        
-        return self
-    
-    def run_analysis(self):
-        """运行完整分析流程"""
+    def run_calculation(self):
+        """运行完整计算流程"""
         self.fetch_all_data()
-        self.analyze_fund_proportions()
-        self.analyze_hk_market_detail()
-        self.generate_summary_report()
+        self.get_monthly_summary()
         return self
 
 # 示例用法
 if __name__ == "__main__":
-    analyzer = CapitalFlowAnalyzer()
-    analyzer.run_analysis()
+    calculator = CapitalFlowCalculator()
+    calculator.run_calculation()

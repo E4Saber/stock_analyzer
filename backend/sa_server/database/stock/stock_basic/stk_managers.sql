@@ -21,7 +21,7 @@ CREATE TABLE stk_managers (
 );
 
 -- 添加表注释
-COMMENT ON TABLE stk_managers IS '上市公司管理层信息表';
+COMMENT ON TABLE stk_managers IS '上市公司管理层信息';
 
 -- 添加字段注释
 COMMENT ON COLUMN stk_managers.id IS '自增主键';
