@@ -10,6 +10,8 @@ from .db_services.stock_service.stock_basic.stk_managers_service import import_s
 from .db_services.stock_service.stock_basic.stk_rewards_service import import_stock_rewards
 from .db_services.stock_service.stock_basic.new_share_service import get_annual_ipo_stats
 from .db_services.stock_service.stock_basic.bak_basic_service import get_market_overview
+from .db_services.stock_service.fund_flows.moneyflow_service import import_daily_moneyflow
+
 
 async def stock_basic_test():
     db = await get_db()
@@ -81,6 +83,13 @@ async def bak_basic_test():
     finally:
         await db.close()
 
+async def moneyflow_test():
+    db = await get_db()
+    try:
+        await import_daily_moneyflow(db, trade_date='20210930')
+    finally:
+        await db.close()
+
 if __name__ == "__main__":
     # asyncio.run(stock_basic_test())
     # asyncio.run(stk_premarket_test())
@@ -91,4 +100,5 @@ if __name__ == "__main__":
     # asyncio.run(stk_managers_test())
     # asyncio.run(stk_rewards_test())
     # asyncio.run(new_share_test())
-    asyncio.run(bak_basic_test())
+    # asyncio.run(bak_basic_test())
+    asyncio.run(moneyflow_test())

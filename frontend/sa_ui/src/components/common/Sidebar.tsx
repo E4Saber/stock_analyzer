@@ -8,7 +8,8 @@ import {
   HeartOutlined,
   SettingOutlined,
   BarChartOutlined,
-  FireOutlined
+  FireOutlined,
+  FundViewOutlined
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
@@ -27,6 +28,7 @@ const Sidebar: React.FC = () => {
     if (path.startsWith('/market/overview')) return ['market_overview'];
     if (path.startsWith('/market/hotspot')) return ['market_hotspot'];
     if (path.startsWith('/stocks')) return ['stock_detail'];
+    if (path.startsWith('/ambush_predictive')) return ['ambush_predictive'];
     if (path.startsWith('/watchlist')) return ['watchlist'];
     if (path.startsWith('/settings')) return ['settings'];
     return ['dashboard'];
@@ -60,6 +62,11 @@ const Sidebar: React.FC = () => {
       key: 'stock_detail',
       icon: <StockOutlined />,
       label: <Link to="/stocks/600519">股票详情</Link>
+    },
+    {
+      key: 'ambush_predictive',
+      icon: <FundViewOutlined />,
+      label: <Link to="/ambush_predictive">股票伏击分析</Link>
     },
     {
       key: 'watchlist',

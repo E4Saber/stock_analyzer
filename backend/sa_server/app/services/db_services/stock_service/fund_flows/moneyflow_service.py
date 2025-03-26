@@ -1,8 +1,9 @@
-import pandas as pd
 import datetime
+import pandas as pd
 from typing import List, Optional, Dict, Any
-from app.data.db_modules.stock_modules.fund_flows.moneyflow import MoneyflowData
 from app.external.tushare_api.fund_flows_api import get_moneyflow
+from app.data.db_modules.stock_modules.fund_flows.moneyflow import MoneyflowData
+
 
 class MoneyflowService:
     """股票资金流向数据导入服务，使用PostgreSQL COPY命令高效导入数据"""

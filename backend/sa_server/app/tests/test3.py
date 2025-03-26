@@ -1,435 +1,658 @@
-import warnings
+from pydantic import BaseModel, Field, validator, root_validator
+from typing import Dict, List, Optional, Union, Tuple
 import numpy as np
 import pandas as pd
-from app.external.tushare_client import get_tushare_client
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+from dataclasses import dataclass
 
 
-warnings.filterwarnings('ignore')
+class FundFlowIndicators(BaseModel):
+    """资金流入特征指标"""
+    
+    # 大单资金流入指标
+    large_order_net_inflow_days: int = Field(
+        default=10, 
+        description="统计大单净流入的天数范围"
+    )
+    large_order_net_inflow_threshold: float = Field(
+        default=0.5, 
+        description="大单净流入占流通市值的最小比例(百分比)"
+    )
+    large_order_net_inflow_continuity: float = Field(
+        default=0.7, 
+        description="大单净流入天数占比的最小值(0-1)"
+    )
+    
+    # 尾盘资金流特征
+    closing_inflow_weight: float = Field(
+        default=1.5, 
+        description="尾盘资金流入的权重倍数"
+    )
+    closing_inflow_duration: int = Field(
+        default=30, 
+        description="尾盘最后N分钟的资金流入统计"
+    )
+    
+    # 资金规模匹配指标
+    fund_to_market_cap_ratio: float = Field(
+        default=0.5, 
+        description="累计资金流入占流通市值的最小比例(百分比)"
+    )
+    daily_fund_to_turnover_ratio: float = Field(
+        default=10.0, 
+        description="日均资金流入占日均成交额的最小比例(百分比)"
+    )
+    
+    # 权重设置
+    weight: float = Field(default=0.3, description="资金流入特征在总评分中的权重")
+    
+    class Config:
+        validate_assignment = True
 
-class CapitalFlowCalculator:
-    """
-    资金流向计算器类
-    用于获取并计算沪深港通资金流向、外资持股等基础数据
-    """
-    def __init__(self):
-        """初始化资金流向计算器"""
-        self.pro = get_tushare_client()
-        # 使用历史日期，避免使用未来日期导致数据为空
-        self.end_date = '20240901'  # 可调整为需要的结束日期
-        self.start_date = '20250324'  # 默认分析一年数据
-        
-        # 存储各类数据
-        self.hsgt_flow = None  # 沪深港通资金流向
-        self.ggt_daily = None  # 港股通每日成交
-        self.foreign_hold = None  # 外资持股
-        self.margin_data = None  # 融资融券数据(作为本地资金参考)
-        self.index_data = {}   # 指数数据
-        
-        # 调试模式，用于打印更多信息以便排查问题
-        self.debug_mode = True
+
+class ShareStructureIndicators(BaseModel):
+    """筹码结构特征指标"""
     
-    def set_date_range(self, start_date, end_date):
-        """设置日期范围"""
-        self.start_date = start_date
-        self.end_date = end_date
-        return self
+    # 换手率特征
+    turnover_rate_range_min: float = Field(
+        default=1.0, 
+        description="换手率下限(百分比)"
+    )
+    turnover_rate_range_max: float = Field(
+        default=3.0, 
+        description="换手率上限(百分比)"
+    )
+    turnover_rate_stability: float = Field(
+        default=0.3, 
+        description="换手率波动系数上限(标准差/均值)"
+    )
     
-    def fetch_all_data(self):
-        """获取所有相关数据"""
-        print(f"获取日期范围: {self.start_date} 至 {self.end_date} 的资金流向数据")
-        self._fetch_hsgt_flow()
-        self._fetch_ggt_daily()
-        self._fetch_foreign_investment()
-        self._fetch_margin_data()
-        self._fetch_index_data()
+    # 筹码集中度
+    shareholders_decrease_rate: float = Field(
+        default=5.0, 
+        description="股东户数减少率最小值(百分比)"
+    )
+    major_shareholders_holding_change: float = Field(
+        default=0.5, 
+        description="大股东持股增加的最小变动(百分比)"
+    )
+    share_concentration_increase: float = Field(
+        default=2.0, 
+        description="筹码集中度提升的最小值(百分比)"
+    )
+    
+    # 成交结构
+    large_order_bid_ask_ratio: float = Field(
+        default=1.2, 
+        description="大单买入/卖出比例的最小值"
+    )
+    large_order_proportion_trend: float = Field(
+        default=5.0, 
+        description="大单占比增长的最小值(百分比)"
+    )
+    
+    # 权重设置
+    weight: float = Field(default=0.25, description="筹码结构特征在总评分中的权重")
+
+
+class TechnicalPatternIndicators(BaseModel):
+    """技术形态特征指标"""
+    
+    # 价格形态
+    price_volatility_decrease: float = Field(
+        default=20.0, 
+        description="价格波动性降低的最小百分比"
+    )
+    support_level_increase: float = Field(
+        default=2.0, 
+        description="支撑位抬高的最小百分比"
+    )
+    resistance_level_stability: float = Field(
+        default=1.0, 
+        description="阻力位变化的最大百分比"
+    )
+    
+    # 洗盘信号
+    long_lower_shadow_frequency: int = Field(
+        default=3, 
+        description="观察期内长下影线出现的最小次数"
+    )
+    false_breakout_recovery: int = Field(
+        default=2, 
+        description="假突破后回落但无恐慌性抛售的最小次数"
+    )
+    closing_price_strength: float = Field(
+        default=0.5, 
+        description="尾盘拉升的最小幅度(百分比)"
+    )
+    
+    # 突破前兆
+    volume_increase_before_breakout: float = Field(
+        default=50.0, 
+        description="突破前量能增加的最小百分比"
+    )
+    key_resistance_test_frequency: int = Field(
+        default=3, 
+        description="关键压力位测试的最小次数"
+    )
+    moving_average_alignment: bool = Field(
+        default=True, 
+        description="均线系统是否开始多头排列"
+    )
+    
+    # 权重设置
+    weight: float = Field(default=0.2, description="技术形态特征在总评分中的权重")
+
+
+class MainForceIndicators(BaseModel):
+    """主力特征判断指标"""
+    
+    # 主力类型识别
+    institutional_buyer_proportion: float = Field(
+        default=50.0, 
+        description="机构买入占比的最小值(百分比)"
+    )
+    northbound_capital_holding_change: float = Field(
+        default=0.2, 
+        description="北向资金持股变化的最小值(百分比)"
+    )
+    major_shareholder_increase: bool = Field(
+        default=False, 
+        description="是否有大股东增持"
+    )
+    
+    # 操作风格匹配
+    building_position_duration: int = Field(
+        default=10, 
+        description="建仓持续的最小天数"
+    )
+    building_position_pattern: str = Field(
+        default="steady", 
+        description="建仓模式: steady(稳定), aggressive(激进), cautious(谨慎)"
+    )
+    similar_stock_pattern_match: bool = Field(
+        default=False, 
+        description="是否与类似个股操作模式匹配"
+    )
+    
+    # 权重设置
+    weight: float = Field(default=0.15, description="主力特征在总评分中的权重")
+
+
+class MarketEnvironmentIndicators(BaseModel):
+    """市场环境匹配指标"""
+    
+    # 市场风格
+    market_style_match: bool = Field(
+        default=True, 
+        description="是否匹配当前市场风格"
+    )
+    market_attention_to_sector: float = Field(
+        default=0.5, 
+        description="市场对该板块的关注度(0-1)"
+    )
+    
+    # 联动效应
+    sector_stocks_performance: float = Field(
+        default=5.0, 
+        description="同板块个股平均涨幅的最小值(百分比)"
+    )
+    related_concept_heat: float = Field(
+        default=0.6, 
+        description="相关概念热度(0-1)"
+    )
+    policy_environment_match: bool = Field(
+        default=True, 
+        description="是否匹配当前政策环境"
+    )
+    
+    # 权重设置
+    weight: float = Field(default=0.1, description="市场环境在总评分中的权重")
+
+
+class FundBuryingModel(BaseModel):
+    """资金埋伏股票预测模型"""
+    
+    # 模型名称和描述
+    model_name: str = Field(default="资金埋伏预测模型", description="模型名称")
+    description: str = Field(default="识别被主力资金埋伏且具备拉升潜力的股票", description="模型描述")
+    
+    # 各维度指标
+    fund_flow: FundFlowIndicators = Field(default_factory=FundFlowIndicators)
+    share_structure: ShareStructureIndicators = Field(default_factory=ShareStructureIndicators)
+    technical_pattern: TechnicalPatternIndicators = Field(default_factory=TechnicalPatternIndicators)
+    main_force: MainForceIndicators = Field(default_factory=MainForceIndicators)
+    market_environment: MarketEnvironmentIndicators = Field(default_factory=MarketEnvironmentIndicators)
+    
+    # 回测参数
+    verification_periods: Dict[str, int] = Field(
+        default={
+            "short_term": 10,   # 短线验证期(天)
+            "medium_term": 30,  # 中线验证期(天)
+            "long_term": 90     # 长线验证期(天)
+        },
+        description="不同周期的验证天数"
+    )
+    
+    # 止损设置
+    stop_loss_levels: Dict[str, float] = Field(
+        default={
+            "short_term": 5.0,   # 短线止损比例(%)
+            "medium_term": 10.0, # 中线止损比例(%)
+            "long_term": 15.0    # 长线止损比例(%)
+        },
+        description="不同周期的止损百分比"
+    )
+    
+    # 预测阈值
+    prediction_threshold: float = Field(
+        default=70.0, 
+        description="预测分数的阈值，高于该值视为被埋伏"
+    )
+    
+    @root_validator
+    def check_weights_sum(cls, values):
+        """验证各维度权重之和是否为1"""
+        dimensions = ['fund_flow', 'share_structure', 'technical_pattern', 'main_force', 'market_environment']
+        weight_sum = sum(values[dim].weight for dim in dimensions if dim in values)
         
-        # 打印数据汇总
-        self._print_data_summary()
+        if not np.isclose(weight_sum, 1.0, atol=1e-2):
+            raise ValueError(f"所有维度的权重之和必须为1.0，当前为{weight_sum}")
         
-        return self
-    
-    def _print_data_summary(self):
-        """打印数据汇总信息"""
-        print("\n===== 资金流向数据汇总 =====")
+        return values
+
+    def calculate_score(self, stock_data: Dict) -> Dict[str, Union[float, Dict]]:
+        """
+        计算股票的资金埋伏得分
         
-        # 沪深港通资金流向汇总
-        if not self.hsgt_flow.empty:
-            north_sum = self.hsgt_flow['north_money'].sum()
-            north_avg = self.hsgt_flow['north_money'].mean()
-            south_sum = self.hsgt_flow['south_money'].sum()
-            south_avg = self.hsgt_flow['south_money'].mean()
+        Args:
+            stock_data: 包含股票各项指标数据的字典
             
-            print("\n沪深港通资金流向:")
-            print(f"北向资金累计净流入: {north_sum:.2f}亿元")
-            print(f"北向资金日均净流入: {north_avg:.2f}亿元")
-            print(f"南向资金累计净流入: {south_sum:.2f}亿元")
-            print(f"南向资金日均净流入: {south_avg:.2f}亿元")
-            
-            # 流入/流出天数统计
-            north_inflow_days = (self.hsgt_flow['north_money'] > 0).sum()
-            north_outflow_days = (self.hsgt_flow['north_money'] < 0).sum()
-            south_inflow_days = (self.hsgt_flow['south_money'] > 0).sum()
-            south_outflow_days = (self.hsgt_flow['south_money'] < 0).sum()
-            
-            print(f"北向资金净流入天数: {north_inflow_days}天")
-            print(f"北向资金净流出天数: {north_outflow_days}天")
-            print(f"南向资金净流入天数: {south_inflow_days}天")
-            print(f"南向资金净流出天数: {south_outflow_days}天")
-        
-        # 港股通每日成交汇总
-        if not self.ggt_daily.empty:
-            buy_sum = self.ggt_daily['buy_amount'].sum()
-            sell_sum = self.ggt_daily['sell_amount'].sum()
-            net_flow = self.ggt_daily['net_flow'].sum()
-            
-            print("\n港股通成交汇总:")
-            print(f"总买入金额: {buy_sum:.2f}亿元")
-            print(f"总卖出金额: {sell_sum:.2f}亿元")
-            print(f"净买入金额: {net_flow:.2f}亿元")
-            
-            if 'buy_volume' in self.ggt_daily.columns and 'sell_volume' in self.ggt_daily.columns:
-                buy_vol = self.ggt_daily['buy_volume'].sum()
-                sell_vol = self.ggt_daily['sell_volume'].sum()
-                print(f"总买入量: {buy_vol:.2f}亿股")
-                print(f"总卖出量: {sell_vol:.2f}亿股")
-        
-        # 外资持股汇总
-        if not self.foreign_hold.empty:
-            print("\n外资持股汇总:")
-            if 'foreign_flow' in self.foreign_hold.columns:
-                foreign_sum = self.foreign_hold['foreign_flow'].sum()
-                foreign_avg = self.foreign_hold['foreign_flow'].mean()
-                print(f"外资累计净流入(估计): {foreign_sum:.2f}亿元")
-                print(f"外资日均净流入(估计): {foreign_avg:.2f}亿元")
-            elif 'hold_value' in self.foreign_hold.columns and len(self.foreign_hold) > 1:
-                first_hold = self.foreign_hold['hold_value'].iloc[0]
-                last_hold = self.foreign_hold['hold_value'].iloc[-1]
-                change = last_hold - first_hold
-                print(f"外资持股市值(期初): {first_hold:.2f}亿元")
-                print(f"外资持股市值(期末): {last_hold:.2f}亿元")
-                print(f"外资持股市值变化: {change:.2f}亿元")
-        
-        # 融资融券数据汇总
-        if not self.margin_data.empty:
-            print("\n融资融券数据汇总:")
-            rzye_first = self.margin_data['rzye'].iloc[0]
-            rzye_last = self.margin_data['rzye'].iloc[-1]
-            rzye_change = rzye_last - rzye_first
-            
-            print(f"融资余额(期初): {rzye_first:.2f}亿元")
-            print(f"融资余额(期末): {rzye_last:.2f}亿元")
-            print(f"融资余额变化: {rzye_change:.2f}亿元")
-        
-        # 指数数据汇总
-        if self.index_data:
-            print("\n指数表现汇总:")
-            for code, data in self.index_data.items():
-                name = self._get_index_name(code)
-                if not data.empty:
-                    first_close = data['close'].iloc[0]
-                    last_close = data['close'].iloc[-1]
-                    change_pct = (last_close / first_close - 1) * 100
-                    print(f"{name} 变化: {change_pct:.2f}%，收盘价: {first_close:.2f} -> {last_close:.2f}")
-    
-    def _get_index_name(self, code):
-        """根据指数代码获取指数名称"""
-        index_names = {
-            '000001.SH': '上证指数',
-            'HSI.HK': '恒生指数',
-            '399001.SZ': '深证成指'
-        }
-        return index_names.get(code, code)
-    
-    def _fetch_hsgt_flow(self):
-        """获取沪深港通资金流向"""
-        try:
-            print("\n正在获取沪深港通资金流向数据...")
-            self.hsgt_flow = self.pro.moneyflow_hsgt(start_date=self.start_date, end_date=self.end_date)
-            if not self.hsgt_flow.empty:
-                # 格式化和处理数据
-                self.hsgt_flow = self.hsgt_flow.sort_values('trade_date')
-                self.hsgt_flow['trade_date'] = pd.to_datetime(self.hsgt_flow['trade_date'])
-                # 单位转换：将元转换为亿元
-                self.hsgt_flow['north_money'] = self.hsgt_flow['north_money'] / 100000000
-                self.hsgt_flow['south_money'] = self.hsgt_flow['south_money'] / 100000000
-                # 计算累计流入
-                self.hsgt_flow['north_money_cumsum'] = self.hsgt_flow['north_money'].cumsum()
-                self.hsgt_flow['south_money_cumsum'] = self.hsgt_flow['south_money'].cumsum()
-                print(f"获取到 {len(self.hsgt_flow)} 条沪深港通流向记录")
-            else:
-                print("未获取到沪深港通资金流向数据")
-        except Exception as e:
-            print(f"获取沪深港通资金流向出错: {e}")
-            self.hsgt_flow = pd.DataFrame()
-    
-    def _fetch_ggt_daily(self):
-        """获取港股通每日成交统计"""
-        try:
-            print("\n正在获取港股通每日成交统计...")
-            self.ggt_daily = self.pro.ggt_daily(start_date=self.start_date, end_date=self.end_date)
-            if not self.ggt_daily.empty:
-                # 格式化和处理数据
-                self.ggt_daily = self.ggt_daily.sort_values('trade_date')
-                self.ggt_daily['trade_date'] = pd.to_datetime(self.ggt_daily['trade_date'])
-                # 计算净流入
-                self.ggt_daily['net_flow'] = self.ggt_daily['buy_amount'] - self.ggt_daily['sell_amount']
-                # 计算累计净流入
-                self.ggt_daily['net_flow_cumsum'] = self.ggt_daily['net_flow'].cumsum()
-                print(f"获取到 {len(self.ggt_daily)} 条港股通每日成交记录")
-            else:
-                print("未获取到港股通每日成交统计数据")
-        except Exception as e:
-            print(f"获取港股通每日成交统计出错: {e}")
-            self.ggt_daily = pd.DataFrame()
-    
-    def _fetch_foreign_investment(self):
-        """获取外资(QFII/RQFII)持股数据"""
-        try:
-            print("\n正在获取外资持股数据...")
-            # 获取特定日期的外资持股数据
-            sample_dates = []
-            
-            # 尝试获取季度末数据
-            current_date = pd.to_datetime(self.start_date)
-            end_date = pd.to_datetime(self.end_date)
-            
-            while current_date <= end_date:
-                # 获取每个季度末的数据
-                if current_date.month in [3, 6, 9, 12]:
-                    # 获取月末日期
-                    month_end = pd.Timestamp(current_date.year, current_date.month, 1) + pd.offsets.MonthEnd(1)
-                    sample_dates.append(month_end.strftime('%Y%m%d'))
-                current_date += pd.DateOffset(months=1)
-            
-            # 如果日期太少，添加更多日期点
-            if len(sample_dates) < 2:
-                sample_dates = [self.start_date, self.end_date]
-            
-            print(f"将获取以下日期的外资持股数据: {sample_dates}")
-            
-            all_foreign_data = []
-            for date in sample_dates:
-                try:
-                    # 尝试不同的API获取外资持股数据
-                    foreign_data = pd.DataFrame()
-                    api_tried = []
-                    
-                    # 尝试使用qfii_hold接口
-                    try:
-                        foreign_data = self.pro.query('qfii_hold', trade_date=date)
-                        api_tried.append('qfii_hold')
-                    except Exception as e:
-                        if self.debug_mode:
-                            print(f"获取 {date} 的qfii_hold数据出错: {e}")
-                    
-                    # 如果qfii_hold失败，尝试qfii_shareholding接口
-                    if foreign_data.empty:
-                        try:
-                            foreign_data = self.pro.query('qfii_shareholding', trade_date=date)
-                            api_tried.append('qfii_shareholding')
-                        except Exception as e:
-                            if self.debug_mode:
-                                print(f"获取 {date} 的qfii_shareholding数据出错: {e}")
-                    
-                    # 如果有其他可能的API，继续尝试
-                    if foreign_data.empty:
-                        try:
-                            foreign_data = self.pro.query('foreign_holdings', trade_date=date)
-                            api_tried.append('foreign_holdings')
-                        except Exception as e:
-                            if self.debug_mode:
-                                print(f"获取 {date} 的foreign_holdings数据出错: {e}")
-                    
-                    if not foreign_data.empty:
-                        foreign_data['trade_date'] = pd.to_datetime(date)
-                        all_foreign_data.append(foreign_data)
-                        print(f"获取到 {date} 的外资持股数据 ({len(foreign_data)}条), 使用接口: {', '.join(api_tried)}")
-                    else:
-                        print(f"未能获取到 {date} 的外资持股数据，尝试了接口: {', '.join(api_tried)}")
-                except Exception as e:
-                    print(f"获取 {date} 的外资持股数据出错: {e}")
-            
-            if all_foreign_data:
-                self.foreign_hold = pd.concat(all_foreign_data, ignore_index=True)
-                # 根据获取到的数据结构进行处理
-                if 'hold_vol' in self.foreign_hold.columns and 'price' in self.foreign_hold.columns:
-                    # 计算外资持股市值总和
-                    self.foreign_hold['hold_value'] = self.foreign_hold['hold_vol'] * self.foreign_hold['price']
-                    self.foreign_hold = self.foreign_hold.groupby('trade_date').agg({'hold_value': 'sum'}).reset_index()
-                    self.foreign_hold['hold_value'] = self.foreign_hold['hold_value'] / 100000000  # 转换为亿元
-                    print(f"合并后获取到 {len(self.foreign_hold)} 个日期点的外资持股数据")
-                else:
-                    print("外资持股数据列名与预期不符，使用可用列进行计算")
-            else:
-                print("未获取到任何外资持股数据，将使用替代方法估算")
-                
-                # 如果无法获取QFII数据，使用北向资金作为外资流入的替代指标
-                if not self.hsgt_flow.empty:
-                    # 假设外资流入与北向资金有一定关联，但外资更加分散
-                    self.foreign_hold = self.hsgt_flow[['trade_date']].copy()
-                    self.foreign_hold['foreign_flow'] = self.hsgt_flow['north_money'] * 0.65
-                    self.foreign_hold['foreign_flow_cumsum'] = self.foreign_hold['foreign_flow'].cumsum()
-                    print("已使用北向资金数据估算外资流入")
-                else:
-                    # 如果北向资金也没有，创建一个空的DataFrame
-                    self.foreign_hold = pd.DataFrame(columns=['trade_date', 'foreign_flow', 'foreign_flow_cumsum'])
-        except Exception as e:
-            print(f"获取外资数据整体出错: {e}")
-            # 创建空的DataFrame
-            self.foreign_hold = pd.DataFrame(columns=['trade_date', 'foreign_flow', 'foreign_flow_cumsum'])
-    
-    def _fetch_margin_data(self):
-        """获取融资融券数据作为本地资金参考"""
-        try:
-            print("\n正在获取融资融券数据...")
-            # 获取融资融券汇总数据
-            self.margin_data = self.pro.margin(start_date=self.start_date, end_date=self.end_date)
-            if not self.margin_data.empty:
-                # 格式化和处理数据
-                self.margin_data = self.margin_data.sort_values('trade_date')
-                self.margin_data['trade_date'] = pd.to_datetime(self.margin_data['trade_date'])
-                # 计算融资余额变化（作为本地资金流向的参考）
-                self.margin_data['rzye'] = self.margin_data['rzye'] / 100000000  # 转换为亿元
-                self.margin_data['rzye_change'] = self.margin_data['rzye'].diff()
-                print(f"获取到 {len(self.margin_data)} 条融资融券记录")
-            else:
-                print("未获取到融资融券数据")
-        except Exception as e:
-            print(f"获取融资融券数据出错: {e}")
-            self.margin_data = pd.DataFrame()
-    
-    def _fetch_index_data(self):
-        """获取相关指数数据"""
-        indices = {
-            '000001.SH': '上证指数',
-            'HSI.HK': '恒生指数',
-            '399001.SZ': '深证成指'
+        Returns:
+            包含总分和各维度得分的字典
+        """
+        # 初始化各维度得分
+        dimension_scores = {
+            "fund_flow": 0,
+            "share_structure": 0,
+            "technical_pattern": 0,
+            "main_force": 0,
+            "market_environment": 0
         }
         
-        print("\n正在获取相关指数行情数据...")
-        for code, name in indices.items():
-            try:
-                # 尝试获取指数数据
-                index_data = self.pro.index_daily(ts_code=code, start_date=self.start_date, end_date=self.end_date)
-                if not index_data.empty:
-                    # 格式化和处理数据
-                    index_data = index_data.sort_values('trade_date')
-                    index_data['trade_date'] = pd.to_datetime(index_data['trade_date'])
-                    # 计算收益率
-                    index_data['pct_change'] = index_data['close'].pct_change()
-                    self.index_data[code] = index_data
-                    print(f"获取到 {name} ({len(index_data)}条记录)")
-                else:
-                    print(f"未获取到 {name} 数据，尝试备选方法...")
-                    
-                    # 尝试备选方法获取恒生指数
-                    if code == 'HSI.HK':
-                        try:
-                            # 尝试使用港股指数API
-                            alt_data = self.pro.hk_index_daily(ts_code=code, start_date=self.start_date, end_date=self.end_date)
-                            if not alt_data.empty:
-                                alt_data = alt_data.sort_values('trade_date')
-                                alt_data['trade_date'] = pd.to_datetime(alt_data['trade_date'])
-                                alt_data['pct_change'] = alt_data['close'].pct_change()
-                                self.index_data[code] = alt_data
-                                print(f"使用备选API获取到 {name} ({len(alt_data)}条记录)")
-                            else:
-                                print(f"备选方法仍未获取到 {name} 数据")
-                        except Exception as e:
-                            print(f"备选方法获取 {name} 出错: {e}")
-            except Exception as e:
-                print(f"获取 {name} 数据出错: {e}")
-                
-                # 对于恒生指数，尝试备选方法
-                if code == 'HSI.HK':
-                    try:
-                        alt_data = self.pro.hk_index_daily(ts_code=code, start_date=self.start_date, end_date=self.end_date)
-                        if not alt_data.empty:
-                            alt_data = alt_data.sort_values('trade_date')
-                            alt_data['trade_date'] = pd.to_datetime(alt_data['trade_date'])
-                            alt_data['pct_change'] = alt_data['close'].pct_change()
-                            self.index_data[code] = alt_data
-                            print(f"使用备选API获取到 {name} ({len(alt_data)}条记录)")
-                    except Exception as e:
-                        print(f"备选方法获取 {name} 出错: {e}")
-    
-    def export_data(self, filename=None):
-        """导出数据到Excel文件"""
-        if filename is None:
-            filename = f"capital_flow_{self.start_date}_to_{self.end_date}.xlsx"
+        # 这里应实现具体的评分逻辑，根据stock_data中的数据与模型指标进行比较
+        # 为简化示例，此处仅返回随机分数
+        for dimension in dimension_scores:
+            # 实际应用中，应根据stock_data中的值与模型中的阈值进行比较计算得分
+            dimension_scores[dimension] = np.random.uniform(60, 95)
         
-        try:
-            with pd.ExcelWriter(filename) as writer:
-                # 导出沪深港通资金流向
-                if not self.hsgt_flow.empty:
-                    self.hsgt_flow.to_excel(writer, sheet_name='沪深港通资金流向', index=False)
-                
-                # 导出港股通每日成交
-                if not self.ggt_daily.empty:
-                    self.ggt_daily.to_excel(writer, sheet_name='港股通每日成交', index=False)
-                
-                # 导出外资持股
-                if not self.foreign_hold.empty:
-                    self.foreign_hold.to_excel(writer, sheet_name='外资持股', index=False)
-                
-                # 导出融资融券数据
-                if not self.margin_data.empty:
-                    self.margin_data.to_excel(writer, sheet_name='融资融券数据', index=False)
-                
-                # 导出指数数据
-                for code, data in self.index_data.items():
-                    if not data.empty:
-                        name = self._get_index_name(code)
-                        data.to_excel(writer, sheet_name=f'指数_{name}', index=False)
-            
-            print(f"\n数据已成功导出到文件: {filename}")
-            return True
-        except Exception as e:
-            print(f"导出数据到Excel出错: {e}")
-            return False
-    
-    def get_monthly_summary(self):
-        """获取月度资金流向汇总"""
-        print("\n===== 月度资金流向汇总 =====")
+        # 计算加权总分
+        dimensions = ['fund_flow', 'share_structure', 'technical_pattern', 'main_force', 'market_environment']
+        total_score = sum(
+            dimension_scores[dim] * getattr(self, dim).weight for dim in dimensions
+        )
         
-        # 按月汇总沪深港通资金流向
-        if not self.hsgt_flow.empty:
-            # 创建月份列
-            self.hsgt_flow['year_month'] = self.hsgt_flow['trade_date'].dt.strftime('%Y-%m')
-            
-            # 按月汇总
-            monthly_hsgt = self.hsgt_flow.groupby('year_month').agg({
-                'north_money': 'sum',
-                'south_money': 'sum'
-            }).reset_index()
-            
-            print("\n月度沪深港通资金流向:")
-            for _, row in monthly_hsgt.iterrows():
-                print(f"{row['year_month']}  北向: {row['north_money']:.2f}亿元  南向: {row['south_money']:.2f}亿元")
-        
-        # 按月汇总外资流入
-        if not self.foreign_hold.empty and 'foreign_flow' in self.foreign_hold.columns:
-            # 创建月份列
-            self.foreign_hold['year_month'] = self.foreign_hold['trade_date'].dt.strftime('%Y-%m')
-            
-            # 按月汇总
-            monthly_foreign = self.foreign_hold.groupby('year_month').agg({
-                'foreign_flow': 'sum'
-            }).reset_index()
-            
-            print("\n月度外资资金流向(估计):")
-            for _, row in monthly_foreign.iterrows():
-                print(f"{row['year_month']}  外资: {row['foreign_flow']:.2f}亿元")
-        
-        return self
-    
-    def run_calculation(self):
-        """运行完整计算流程"""
-        self.fetch_all_data()
-        self.get_monthly_summary()
-        return self
+        return {
+            "total_score": total_score,
+            "dimension_scores": dimension_scores,
+            "is_predicted_buried": total_score >= self.prediction_threshold
+        }
 
-# 示例用法
+
+class BacktestResult(BaseModel):
+    """回测结果模型"""
+    
+    # 基本信息
+    stock_code: str
+    stock_name: str
+    prediction_date: datetime
+    prediction_score: float
+    is_predicted_buried: bool
+    
+    # 表现指标
+    performance: Dict[str, Dict[str, float]] = Field(
+        default_factory=lambda: {
+            "short_term": {"max_gain": 0, "max_loss": 0, "final_gain": 0},
+            "medium_term": {"max_gain": 0, "max_loss": 0, "final_gain": 0},
+            "long_term": {"max_gain": 0, "max_loss": 0, "final_gain": 0}
+        }
+    )
+    
+    # 信号是否有效
+    signal_effectiveness: Dict[str, bool] = Field(
+        default_factory=lambda: {
+            "short_term": False,
+            "medium_term": False, 
+            "long_term": False
+        }
+    )
+    
+    # 回测时各维度的得分
+    dimension_scores: Dict[str, float] = Field(default_factory=dict)
+
+
+class BacktestFramework:
+    """回测框架"""
+    
+    def __init__(self, model: FundBuryingModel):
+        self.model = model
+        self.results: List[BacktestResult] = []
+    
+    def run_backtest(self, 
+                    stock_data_list: List[Dict], 
+                    price_history: Dict[str, pd.DataFrame]) -> List[BacktestResult]:
+        """
+        运行回测
+        
+        Args:
+            stock_data_list: 包含多只股票数据的列表，每个元素是一个字典
+            price_history: 股票历史价格数据，键为股票代码，值为DataFrame
+            
+        Returns:
+            回测结果列表
+        """
+        results = []
+        
+        for stock_data in stock_data_list:
+            # 预测股票是否被埋伏
+            prediction = self.model.calculate_score(stock_data)
+            
+            # 创建初始回测结果
+            result = BacktestResult(
+                stock_code=stock_data["stock_code"],
+                stock_name=stock_data["stock_name"],
+                prediction_date=stock_data["date"],
+                prediction_score=prediction["total_score"],
+                is_predicted_buried=prediction["is_predicted_buried"],
+                dimension_scores=prediction["dimension_scores"]
+            )
+            
+            # 如果股票被预测为埋伏股，分析后续表现
+            if result.is_predicted_buried and stock_data["stock_code"] in price_history:
+                # 获取该股票的价格历史数据
+                df = price_history[stock_data["stock_code"]]
+                prediction_idx = df[df['date'] == stock_data["date"]].index[0]
+                
+                # 计算不同周期的表现
+                for period_name, days in self.model.verification_periods.items():
+                    if prediction_idx + days < len(df):
+                        # 获取验证期内的价格数据
+                        period_df = df.iloc[prediction_idx:prediction_idx + days + 1]
+                        
+                        # 计算最大收益、最大回撤和最终收益
+                        base_price = period_df.iloc[0]['close']
+                        period_df['return'] = period_df['close'] / base_price - 1
+                        
+                        max_gain = period_df['return'].max() * 100
+                        max_loss = period_df['return'].min() * 100
+                        final_gain = period_df['return'].iloc[-1] * 100
+                        
+                        # 更新回测结果
+                        result.performance[period_name] = {
+                            "max_gain": max_gain,
+                            "max_loss": max_loss,
+                            "final_gain": final_gain
+                        }
+                        
+                        # 判断信号是否有效
+                        # 这里的判断标准可以自定义，例如最终收益大于5%
+                        result.signal_effectiveness[period_name] = final_gain >= 5.0
+            
+            results.append(result)
+            
+        self.results = results
+        return results
+    
+    def calculate_metrics(self) -> Dict:
+        """计算回测的综合指标"""
+        if not self.results:
+            return {"error": "No backtest results found"}
+        
+        # 初始化指标字典
+        metrics = {
+            "total_predictions": 0,
+            "buried_predictions": 0,
+            "effectiveness": {
+                "short_term": {"count": 0, "rate": 0},
+                "medium_term": {"count": 0, "rate": 0},
+                "long_term": {"count": 0, "rate": 0}
+            },
+            "avg_performance": {
+                "short_term": {"max_gain": 0, "max_loss": 0, "final_gain": 0},
+                "medium_term": {"max_gain": 0, "max_loss": 0, "final_gain": 0},
+                "long_term": {"max_gain": 0, "max_loss": 0, "final_gain": 0}
+            }
+        }
+        
+        # 统计总预测和被预测为埋伏的股票数
+        metrics["total_predictions"] = len(self.results)
+        metrics["buried_predictions"] = sum(1 for r in self.results if r.is_predicted_buried)
+        
+        if metrics["buried_predictions"] == 0:
+            return {**metrics, "warning": "No stocks predicted as buried"}
+        
+        # 计算各周期的有效性和平均表现
+        buried_results = [r for r in self.results if r.is_predicted_buried]
+        
+        for period in ["short_term", "medium_term", "long_term"]:
+            # 统计有效信号数量
+            valid_signals = sum(1 for r in buried_results if r.signal_effectiveness.get(period, False))
+            metrics["effectiveness"][period]["count"] = valid_signals
+            metrics["effectiveness"][period]["rate"] = valid_signals / metrics["buried_predictions"] * 100
+            
+            # 计算平均表现
+            period_performances = [r.performance.get(period, {}) for r in buried_results 
+                                  if period in r.performance]
+            
+            if period_performances:
+                metrics["avg_performance"][period]["max_gain"] = sum(p.get("max_gain", 0) for p in period_performances) / len(period_performances)
+                metrics["avg_performance"][period]["max_loss"] = sum(p.get("max_loss", 0) for p in period_performances) / len(period_performances)
+                metrics["avg_performance"][period]["final_gain"] = sum(p.get("final_gain", 0) for p in period_performances) / len(period_performances)
+        
+        return metrics
+    
+    def plot_performance_distribution(self):
+        """绘制不同周期的收益分布图"""
+        if not self.results:
+            print("No backtest results to plot")
+            return
+        
+        buried_results = [r for r in self.results if r.is_predicted_buried]
+        if not buried_results:
+            print("No stocks predicted as buried")
+            return
+        
+        fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+        periods = ["short_term", "medium_term", "long_term"]
+        titles = ["短期({}天)".format(self.model.verification_periods["short_term"]),
+                 "中期({}天)".format(self.model.verification_periods["medium_term"]),
+                 "长期({}天)".format(self.model.verification_periods["long_term"])]
+        
+        for i, (period, title) in enumerate(zip(periods, titles)):
+            gains = [r.performance.get(period, {}).get("final_gain", 0) for r in buried_results 
+                    if period in r.performance]
+            
+            if gains:
+                axes[i].hist(gains, bins=20, alpha=0.7)
+                axes[i].axvline(x=0, color='r', linestyle='--')
+                axes[i].set_title(title)
+                axes[i].set_xlabel("收益率(%)")
+                axes[i].set_ylabel("股票数量")
+        
+        plt.tight_layout()
+        plt.show()
+    
+    def plot_dimension_importance(self):
+        """绘制各维度得分与最终收益的相关性分析"""
+        if not self.results:
+            print("No backtest results to plot")
+            return
+        
+        buried_results = [r for r in self.results if r.is_predicted_buried]
+        if not buried_results:
+            print("No stocks predicted as buried")
+            return
+        
+        dimensions = ["fund_flow", "share_structure", "technical_pattern", "main_force", "market_environment"]
+        
+        # 准备数据
+        data = {dim: [] for dim in dimensions}
+        gains = []
+        
+        for result in buried_results:
+            # 使用中期收益作为目标变量
+            if "medium_term" in result.performance:
+                for dim in dimensions:
+                    if dim in result.dimension_scores:
+                        data[dim].append(result.dimension_scores[dim])
+                
+                gains.append(result.performance["medium_term"]["final_gain"])
+        
+        # 计算相关性
+        correlations = {}
+        for dim in dimensions:
+            if data[dim] and len(data[dim]) == len(gains):
+                correlations[dim] = np.corrcoef(data[dim], gains)[0, 1]
+        
+        # 绘制相关性图表
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(correlations.keys(), correlations.values())
+        
+        # 为正负相关设置不同颜色
+        for i, corr in enumerate(correlations.values()):
+            if corr < 0:
+                bars[i].set_color('r')
+        
+        plt.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+        plt.title("各维度得分与中期收益的相关性")
+        plt.ylabel("相关系数")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+
+
+class FundBuryingAnalyzer:
+    """资金埋伏分析器"""
+    
+    def __init__(self, config_path=None):
+        """
+        初始化分析器
+        
+        Args:
+            config_path: 模型配置文件路径，如果为None则使用默认配置
+        """
+        if config_path:
+            # 从文件加载配置
+            self.model = self._load_config(config_path)
+        else:
+            # 使用默认配置
+            self.model = FundBuryingModel()
+        
+        self.backtest_framework = BacktestFramework(self.model)
+    
+    def _load_config(self, config_path: str) -> FundBuryingModel:
+        """从文件加载模型配置"""
+        import json
+        
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        
+        return FundBuryingModel(**config)
+    
+    def save_config(self, config_path: str):
+        """保存当前模型配置到文件"""
+        import json
+        
+        config = self.model.dict()
+        
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+    
+    def analyze_stock(self, stock_data: Dict) -> Dict:
+        """分析单只股票是否被资金埋伏"""
+        return self.model.calculate_score(stock_data)
+    
+    def batch_analyze(self, stock_data_list: List[Dict]) -> List[Dict]:
+        """批量分析多只股票是否被资金埋伏"""
+        results = []
+        
+        for stock_data in stock_data_list:
+            result = self.analyze_stock(stock_data)
+            results.append({
+                "stock_code": stock_data["stock_code"],
+                "stock_name": stock_data["stock_name"],
+                "prediction_score": result["total_score"],
+                "is_predicted_buried": result["is_predicted_buried"],
+                "dimension_scores": result["dimension_scores"]
+            })
+        
+        return results
+    
+    def run_backtest(self, stock_data_list: List[Dict], price_history: Dict[str, pd.DataFrame]):
+        """运行回测"""
+        return self.backtest_framework.run_backtest(stock_data_list, price_history)
+    
+    def get_backtest_metrics(self) -> Dict:
+        """获取回测指标"""
+        return self.backtest_framework.calculate_metrics()
+    
+    def visualize_backtest_results(self):
+        """可视化回测结果"""
+        self.backtest_framework.plot_performance_distribution()
+        self.backtest_framework.plot_dimension_importance()
+
+
+# 使用示例
+def example_usage():
+    # 初始化分析器
+    analyzer = FundBuryingAnalyzer()
+    
+    # 自定义模型参数（可选）
+    analyzer.model.fund_flow.large_order_net_inflow_days = 15
+    analyzer.model.fund_flow.weight = 0.35
+    analyzer.model.technical_pattern.weight = 0.25
+    analyzer.model.share_structure.weight = 0.20
+    analyzer.model.main_force.weight = 0.12
+    analyzer.model.market_environment.weight = 0.08
+    
+    # 准备回测数据
+    # 注意：这里只是示例数据结构，实际应用需要填充真实数据
+    stock_data_list = [
+        {
+            "stock_code": "600001",
+            "stock_name": "示例股票1",
+            "date": datetime(2025, 1, 15),
+            # 以下是模型需要的各种指标数据，实际应用中需要填充
+            "large_order_net_inflow": [], 
+            "turnover_rates": [],
+            # ... 其他指标数据
+        },
+        # ... 更多股票数据
+    ]
+    
+    # 准备历史价格数据
+    price_history = {
+        "600001": pd.DataFrame({
+            "date": pd.date_range(start="2025-01-01", periods=100),
+            "open": np.random.normal(10, 0.5, 100),
+            "high": np.random.normal(10.5, 0.5, 100),
+            "low": np.random.normal(9.5, 0.5, 100),
+            "close": np.random.normal(10, 0.5, 100),
+            "volume": np.random.normal(1000000, 200000, 100)
+        })
+    }
+    
+    # 运行回测
+    analyzer.run_backtest(stock_data_list, price_history)
+    
+    # 获取回测指标
+    metrics = analyzer.get_backtest_metrics()
+    print("回测指标:", metrics)
+    
+    # 可视化回测结果
+    analyzer.visualize_backtest_results()
+
+
 if __name__ == "__main__":
-    calculator = CapitalFlowCalculator()
-    calculator.run_calculation()
+    example_usage()

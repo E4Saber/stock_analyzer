@@ -1,4 +1,4 @@
-from app.data.db_modules.stock_modules.moneyflow.moneyflow import MoneyflowData
+from app.data.db_modules.stock_modules.fund_flows import MoneyflowData
 from typing import List, Optional
 import datetime
 
