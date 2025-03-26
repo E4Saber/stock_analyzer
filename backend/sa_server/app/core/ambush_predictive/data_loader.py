@@ -12,7 +12,7 @@ import requests
 import json
 from typing import Dict, List, Any, Optional, Union
 
-from ..core.data_models import MarketContext
+from data_models import MarketContext
 
 logger = logging.getLogger('fund_burying_system.data_loader')
 

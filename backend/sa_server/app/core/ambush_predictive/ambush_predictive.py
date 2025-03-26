@@ -15,18 +15,18 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 
 # 导入核心模块
-from fund_burying_analyzer.core.analyzer import FundBuryingAnalyzer
-from fund_burying_analyzer.core.data_models import StockMeta, MarketContext
+from analyzer import FundBuryingAnalyzer
+from data_models import StockMeta, MarketContext
 
 # 导入分析模块
-from fund_burying_analyzer.modules.fund_flow_module import FundFlowModule
-from fund_burying_analyzer.modules.share_structure_module import ShareStructureModule
-from fund_burying_analyzer.modules.technical_pattern_module import TechnicalPatternModule
-from fund_burying_analyzer.modules.main_force_module import MainForceModule
-from fund_burying_analyzer.modules.market_environment_module import MarketEnvironmentModule
+from ambush_predictive_modules.fund_flow_module import FundFlowModule
+from ambush_predictive_modules.share_structure_module import ShareStructureModule
+from ambush_predictive_modules.technical_pattern_module import TechnicalPatternModule
+from ambush_predictive_modules.main_force_module import MainForceModule
+from ambush_predictive_modules.market_environment_module import MarketEnvironmentModule
 
 # 导入工具模块
-from fund_burying_analyzer.utils.data_loader import load_stock_data, load_market_context
+from data_loader import load_stock_data, load_market_context
 
 # 配置日志
 logging.basicConfig(

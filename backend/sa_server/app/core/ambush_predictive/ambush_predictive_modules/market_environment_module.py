@@ -9,8 +9,8 @@ from typing import Dict, List, Any, Optional, Union, Tuple
 from datetime import datetime, timedelta
 import logging
 
-from ..core.base_module import AnalysisModule
-from ..core.data_models import StockMeta, MarketContext, AnalysisResult
+from app.core.ambush_predictive.base_module import AnalysisModule
+from app.core.ambush_predictive.data_models import StockMeta, MarketContext, AnalysisResult
 
 logger = logging.getLogger('fund_burying_system')
 
