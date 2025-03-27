@@ -29,6 +29,7 @@ const Sidebar: React.FC = () => {
     if (path.startsWith('/market/hotspot')) return ['market_hotspot'];
     if (path.startsWith('/stocks')) return ['stock_detail'];
     if (path.startsWith('/ambush_predictive')) return ['ambush_predictive'];
+    if (path.startsWith('/economic_monitor')) return ['economic_monitor'];
     if (path.startsWith('/watchlist')) return ['watchlist'];
     if (path.startsWith('/settings')) return ['settings'];
     return ['dashboard'];
@@ -67,6 +68,11 @@ const Sidebar: React.FC = () => {
       key: 'ambush_predictive',
       icon: <FundViewOutlined />,
       label: <Link to="/ambush_predictive">股票伏击分析</Link>
+    },
+    {
+      key: 'economic_monitor',
+      icon: <FundViewOutlined />,
+      label: <Link to="/economic_monitor">宏观经济监测</Link>
     },
     {
       key: 'watchlist',
