@@ -20,12 +20,16 @@ import {
   TeamOutlined,
   GlobalOutlined
 } from '@ant-design/icons';
+import FundFlowOverviewChart from '../charts/FundFlowOverviewChart';
+import FundQualityAnalysisChart from '../charts/FundQualityAnalysisChart';
+import VolumePriceRelationshipChart from '../charts/VolumePriceRelationshipChart';
 
 const { Title, Paragraph } = Typography;
 const { TabPane } = Tabs;
 
 // 定义模块分数和详情接口
 interface ModuleScore {
+  id: number
   name: string;
   score: number;
   weight: number;
@@ -39,6 +43,7 @@ const StockAmbushAnalysis: React.FC = () => {
   // 模拟模块数据
   const modules: ModuleScore[] = [
     {
+      id: 1,
       name: '资金流入特征',
       score: 82.5,
       weight: 0.3,
@@ -50,6 +55,7 @@ const StockAmbushAnalysis: React.FC = () => {
       icon: <LineChartOutlined />
     },
     {
+      id: 2,
       name: '筹码结构特征',
       score: 78.3,
       weight: 0.25,
@@ -61,6 +67,7 @@ const StockAmbushAnalysis: React.FC = () => {
       icon: <SecurityScanOutlined />
     },
     {
+      id: 3,
       name: '技术形态特征',
       score: 75.6,
       weight: 0.2,
@@ -72,6 +79,7 @@ const StockAmbushAnalysis: React.FC = () => {
       icon: <StockOutlined />
     },
     {
+      id: 4,
       name: '主力特征判断',
       score: 80.1,
       weight: 0.15,
@@ -83,6 +91,7 @@ const StockAmbushAnalysis: React.FC = () => {
       icon: <TeamOutlined />
     },
     {
+      id: 5,
       name: '市场环境匹配',
       score: 72.9,
       weight: 0.1,
@@ -143,6 +152,15 @@ const StockAmbushAnalysis: React.FC = () => {
             </Card>
           </Col>
         </Row>
+        {selectedModule.id === 1 && 
+          <Row gutter={16}>
+            <Col span={24}>
+                <FundFlowOverviewChart />
+                <FundQualityAnalysisChart />
+                <VolumePriceRelationshipChart />
+            </Col>
+          </Row>
+        }
       </Modal>
     );
   };
