@@ -5,19 +5,19 @@ import { Layout, ConfigProvider } from 'antd';
 import zhCN from 'antd/lib/locale/zh_CN';
 
 // Import components
-import Header from './components/common/Header';
-import Sidebar from './components/common/Sidebar';
-import Footer from './components/common/Footer';
-import Dashboard from './pages/Dashboard';
-import MarketOverview from './pages/MarketOverview';
-import MarketHotspot from './pages/MarketHotspot';
-import StockDetail from './pages/StockDetail';
-import StockDetailWithAI from './pages/StockDetailWithAI'; // 新添加的AI版本股票详情页
+import Header from './shared/components/common/Header';
+import Sidebar from './shared/components/common/Sidebar';
+import Footer from './shared/components/common/Footer';
+import Dashboard from './features/dashboard/pages/Dashboard';
+import MarketOverview from './features/marketoverview/pages/MarketOverview';
+import MarketHotspot from './features/marketoverview/pages/MarketHotspot';
+import StockDetail from './features/stockinsight/pages/StockDetail';
+import StockDetailWithAI from './features/stockinsight/pages/StockDetailWithAI'; // 新添加的AI版本股票详情页
 
 // Import styles
 import './App.css';
-import StockAmbushAnalysis from './components/stockAmbushAnalysis/StockAmbushAnalysis';
-import EconomicMonitor from './pages/EconomicMonitor';
+import StockAmbushAnalysis from './features/stockinsight/pages/StockAmbushAnalysis';
+import EconomicMonitor from './features/economicmonitor/pages/EconomicMonitor';
 
 const { Content } = Layout;
 
