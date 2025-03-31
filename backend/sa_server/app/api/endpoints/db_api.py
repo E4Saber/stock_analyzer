@@ -5,10 +5,15 @@ from fastapi import Query, Depends
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from app.response.error_code import ErrorCode
-from app.response.response_model import ResponseModel, handle_exception
-from app.response.handle_exception import api_exception_handler
+from app.response.response_model import ResponseModel, api_exception_handler
+
 
 from app.services.db_services.stock_service.stock_financial.express_service import query_express_data
+
+# 在文件开头的导入语句之后添加
+print("Debug: ResponseModel type:", type(ResponseModel))
+print("Debug: ResponseModel dir:", dir(ResponseModel))
+print("Debug: 'success' in dir:", 'success' in dir(ResponseModel))
 
 
 stock_router_prefix= "/stocks"
@@ -122,10 +127,23 @@ async def get_express_data(
         if not express_data:
             return ResponseModel.error(ErrorCode.DATA_NOT_EXISTS, "未找到快报数据")
         
-        return ResponseModel.success(data=express_data)
-    except Exception as e:
-        return handle_exception(e, ErrorCode.DATABASE_ERROR)
+        result = [item.model_dump(mode='json') for item in express_data]
 
+        return ResponseModel(
+            code=ErrorCode.SUCCESS.code,
+            success=True,
+            message="操作成功",
+            data=result
+        )
+    except Exception as e:
+        # 打印详细异常信息
+        import traceback
+        print(f"查询异常: {traceback.format_exc()}")
+        # 返回详细的错误信息
+        return ResponseModel.error(
+            ErrorCode.DATABASE_ERROR, 
+            f"查询失败: {str(e)}"
+        )
 
 
 

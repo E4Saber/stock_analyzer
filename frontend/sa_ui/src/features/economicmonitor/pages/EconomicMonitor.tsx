@@ -1,11 +1,11 @@
 // src/pages/MarketOverviewPage.tsx
 import React from 'react';
 import { Layout, Typography, Breadcrumb, Tabs, Modal } from 'antd';
-import DashboardTab from './parts/DashboardTab';
-import USEconomyTab from './parts/USEconomyTab';
-import ChinaEconomyTab from './parts/ChinaEconomyTab';
-import CrossIndicatorsTab from './parts/CrossIndicatorsTab';
-import IndicatorDetail from './parts/IndicatorDetail';
+// import DashboardTab from './parts/DashboardTab';
+// import USEconomyTab from './parts/USEconomyTab';
+// import ChinaEconomyTab from './parts/ChinaEconomyTab';
+// import CrossIndicatorsTab from './parts/CrossIndicatorsTab';
+// import IndicatorDetail from './parts/IndicatorDetail';
 import { IndicatorType } from '../types/indicator';
 
 const { Content } = Layout;
@@ -64,19 +64,19 @@ const EconomicMonitor: React.FC = () => {
         <div className="economic-monitor-container">
           <Tabs activeKey={activeTab} onChange={handleTabChange} type="card" destroyInactiveTabPane={true}>
             <TabPane tab="仪表盘总览" key="dashboard">
-              <DashboardTab onIndicatorSelect={handleIndicatorSelect} />
+              {/* <DashboardTab onIndicatorSelect={handleIndicatorSelect} /> */}
             </TabPane>
             
             <TabPane tab="美国经济指标" key="us">
-              <USEconomyTab onIndicatorSelect={handleIndicatorSelect} />
+              {/* <USEconomyTab onIndicatorSelect={handleIndicatorSelect} /> */}
             </TabPane>
             
             <TabPane tab="中国经济指标" key="china">
-              <ChinaEconomyTab onIndicatorSelect={handleIndicatorSelect} />
+              {/* <ChinaEconomyTab onIndicatorSelect={handleIndicatorSelect} /> */}
             </TabPane>
             
             <TabPane tab="中美交叉指标" key="cross">
-              <CrossIndicatorsTab onIndicatorSelect={handleIndicatorSelect} />
+              {/* <CrossIndicatorsTab onIndicatorSelect={handleIndicatorSelect} /> */}
             </TabPane>
           </Tabs>
         </div>

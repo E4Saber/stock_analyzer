@@ -1,0 +1,50 @@
+import datetime
+from typing import Optional
+from pydantic import BaseModel, field_validator
+
+
+class UsTrycrData(BaseModel):
+    """
+    Pydantic model for US Treasury Real Yield Curve Rate data.
+    
+    Fields:
+    - date: Date of the real yield curve
+    - y5: 5-year real yield
+    - y7: 7-year real yield
+    - y10: 10-year real yield
+    - y20: 20-year real yield
+    - y30: 30-year real yield
+    """
+    # 日期
+    date: datetime.date
+    # 5年期
+    y5: Optional[float] = None
+    # 7年期
+    y7: Optional[float] = None
+    # 10年期
+    y10: Optional[float] = None
+    # 20年期
+    y20: Optional[float] = None
+    # 30年期
+    y30: Optional[float] = None
+
+    @field_validator('date', mode='before')
+    def parse_date(cls, value):
+        if value is None or value == '':
+            return None
+        if isinstance(value, datetime.date):
+            return value
+        try:
+            # 假设日期格式为 'YYYYMMDD'
+            if isinstance(value, str) and value.isdigit() and len(value) == 8:
+                year = int(value[:4])
+                month = int(value[4:6])
+                day = int(value[6:8])
+                return datetime.date(year, month, day)
+            # 其他常见格式
+            return datetime.date.fromisoformat(value)
+        except (ValueError, TypeError):
+            raise ValueError(f"无效的日期格式: {value}")
+
+    class Config:
+        from_attributes = True

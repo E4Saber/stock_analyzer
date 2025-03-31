@@ -18,6 +18,7 @@ import StockDetailWithAI from './features/stockinsight/pages/StockDetailWithAI';
 import './App.css';
 import StockAmbushAnalysis from './features/stockinsight/pages/StockAmbushAnalysis';
 import EconomicMonitor from './features/economicmonitor/pages/EconomicMonitor';
+import { IndicatorPage } from './demo/IndicatorPage';
 
 const { Content } = Layout;
 
@@ -45,6 +46,7 @@ const App: React.FC = () => {
                   <Route path="/stocks/:code" element={<StockDetail />} />
                   <Route path='/ambush_predictive' element={<StockAmbushAnalysis />} />
                   <Route path="/economic_monitor" element={<EconomicMonitor />} />
+                  <Route path="/cpi_chart_demo" element={<IndicatorPage />} />
                   <Route path="/stocks-ai/:code" element={<StockDetailWithAI />} /> {/* 新添加的AI路由 */}
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Routes>

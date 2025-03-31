@@ -1,3 +1,5 @@
+from functools import wraps
+from fastapi import HTTPException
 from .error_code import ErrorCode
 from pydantic import BaseModel, Field
 from typing import Optional, Any, Union
@@ -51,3 +53,19 @@ def handle_exception(exc: Exception, default_error_code: ErrorCode = ErrorCode.I
         return ResponseModel.error(ErrorCode.BAD_REQUEST, str(exc))
     else:
         return ResponseModel.error(default_error_code, str(exc))
+
+
+def api_exception_handler(func):
+    """API异常处理装饰器"""
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        try:
+            return await func(*args, **kwargs)
+        except Exception as e:
+            # 可以在这里添加日志记录
+            response = handle_exception(e)
+            raise HTTPException(
+                status_code=response.code, 
+                detail=response.model_dump()
+            )
+    return wrapper
