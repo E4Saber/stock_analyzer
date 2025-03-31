@@ -11,6 +11,11 @@ from .db_services.stock_service.stock_basic.stk_rewards_service import import_st
 from .db_services.stock_service.stock_basic.new_share_service import get_annual_ipo_stats
 from .db_services.stock_service.stock_basic.bak_basic_service import get_market_overview
 from .db_services.stock_service.fund_flows.moneyflow_service import import_daily_moneyflow
+from .db_services.stock_service.stock_financial.income_service import import_income_with_params
+from .db_services.stock_service.stock_financial.balancesheet_service import import_stock_balancesheet
+from .db_services.stock_service.stock_financial.cashflow_service import import_stock_cashflow
+from .db_services.stock_service.stock_financial.forecast_service import import_stock_forecast
+from .db_services.stock_service.stock_financial.express_service import import_stock_express
 
 
 async def stock_basic_test():
@@ -90,6 +95,41 @@ async def moneyflow_test():
     finally:
         await db.close()
 
+async def income_test():
+    db = await get_db()
+    try:
+        await import_income_with_params(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
+async def balancesheet_test():
+    db = await get_db()
+    try:
+        await import_stock_balancesheet(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
+async def cashflow_test():
+    db = await get_db()
+    try:
+        await import_stock_cashflow(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
+async def forecast_test():
+    db = await get_db()
+    try:
+        await import_stock_forecast(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
+async def express_test():
+    db = await get_db()
+    try:
+        await import_stock_express(db, ts_code='000001.SZ')
+    finally:
+        await db.close()
+
 if __name__ == "__main__":
     # asyncio.run(stock_basic_test())
     # asyncio.run(stk_premarket_test())
@@ -101,4 +141,9 @@ if __name__ == "__main__":
     # asyncio.run(stk_rewards_test())
     # asyncio.run(new_share_test())
     # asyncio.run(bak_basic_test())
-    asyncio.run(moneyflow_test())
+    # asyncio.run(moneyflow_test())
+    # asyncio.run(income_test())
+    # asyncio.run(balancesheet_test())
+    # asyncio.run(cashflow_test())
+    # asyncio.run(forecast_test())
+    asyncio.run(express_test())

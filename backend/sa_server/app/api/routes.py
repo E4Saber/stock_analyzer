@@ -18,7 +18,7 @@ api_router.include_router(
 )
 
 api_router.include_router(
-    db_api.router,
+    db_api.stock_basic_router,
     prefix="/db_api",
     tags=["db_api"],
 )
