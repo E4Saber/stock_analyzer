@@ -1,31 +1,39 @@
--- 股票数据 - 财务数据
+-- 股票数据 - 财报披露日期数据
 
--- 财报披露计划（disclosure_date）
+-- 财报披露日期表（disclosure_date）
 CREATE TABLE disclosure_date (
     -- Primary key and identification fields
     id SERIAL PRIMARY KEY,
-    ts_code VARCHAR(10) NOT NULL COMMENT 'TS代码',
+    ts_code VARCHAR(10) NOT NULL,
+    end_date DATE,
     
-    -- Disclosure dates
-    ann_date DATE COMMENT '最新披露公告日',
-    end_date DATE COMMENT '报告期',
-    pre_date DATE COMMENT '预计披露日期',
-    actual_date DATE COMMENT '实际披露日期',
-    modify_date DATE COMMENT '披露日期修正记录',
-    
-    -- Metadata
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    -- 披露日期相关字段
+    ann_date DATE,
+    pre_date DATE,
+    actual_date DATE,
+    modify_date DATE
 );
 
 -- Create indexes for frequently queried fields
 CREATE INDEX idx_disclosure_date_ts_code ON disclosure_date(ts_code);
 CREATE INDEX idx_disclosure_date_end_date ON disclosure_date(end_date);
-CREATE INDEX idx_disclosure_date_pre_date ON disclosure_date(pre_date);
 CREATE INDEX idx_disclosure_date_actual_date ON disclosure_date(actual_date);
+CREATE INDEX idx_disclosure_date_pre_date ON disclosure_date(pre_date);
+
+-- Add unique constraint for upsert operations
+ALTER TABLE disclosure_date ADD CONSTRAINT disclosure_date_ts_code_end_date_key 
+UNIQUE (ts_code, end_date);
 
 -- Add table comment
-COMMENT ON TABLE disclosure_date IS '财报披露计划数据';
+COMMENT ON TABLE disclosure_date IS '财报披露日期表';
+
+-- Add column comments
+COMMENT ON COLUMN disclosure_date.ts_code IS 'TS代码';
+COMMENT ON COLUMN disclosure_date.end_date IS '报告期';
+COMMENT ON COLUMN disclosure_date.ann_date IS '最新披露公告日';
+COMMENT ON COLUMN disclosure_date.pre_date IS '预计披露日期';
+COMMENT ON COLUMN disclosure_date.actual_date IS '实际披露日期';
+COMMENT ON COLUMN disclosure_date.modify_date IS '披露日期修正记录';
 
 
 -- 名称	类型	默认显示	描述
