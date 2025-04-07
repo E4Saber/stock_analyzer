@@ -13,6 +13,7 @@ import MarketOverview from './features/marketoverview/pages/MarketOverview';
 import MarketHotspot from './features/marketoverview/pages/MarketHotspot';
 import StockDetail from './features/stockinsight/pages/StockDetail';
 import StockDetailWithAI from './features/stockinsight/pages/StockDetailWithAI'; // 新添加的AI版本股票详情页
+import TestPage from './tests/TestPage'; // 新添加的AI路由
 
 // Import styles
 import './App.css';
@@ -47,7 +48,7 @@ const App: React.FC = () => {
                   <Route path='/ambush_predictive' element={<StockAmbushAnalysis />} />
                   <Route path="/economic_monitor" element={<EconomicMonitor />} />
                   <Route path="/cpi_chart_demo" element={<IndicatorPage />} />
-                  <Route path="/stocks-ai/:code" element={<StockDetailWithAI />} /> {/* 新添加的AI路由 */}
+                  <Route path="/test" element={<TestPage />} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
               </Content>

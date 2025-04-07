@@ -13,6 +13,7 @@ import {
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
+import TestPage from '../../../tests/TestPage';
 
 const { Sider } = Layout;
 type MenuItem = Required<MenuProps>['items'][number];
@@ -34,6 +35,8 @@ const Sidebar: React.FC = () => {
     if (path.startsWith('/cpi_chart_demo')) return ['cpi_chart_demo'];
     if (path.startsWith('/watchlist')) return ['watchlist'];
     if (path.startsWith('/settings')) return ['settings'];
+
+    if (path.startsWith('/test')) return ['test'];
     return ['dashboard'];
   };
 
@@ -90,6 +93,12 @@ const Sidebar: React.FC = () => {
       key: 'settings',
       icon: <SettingOutlined />,
       label: <Link to="/settings">系统设置</Link>
+    },
+
+    {
+      key: 'test',
+      icon: <TestPage />,
+      label: <Link to="/test">测试</Link>
     }
   ];
 
