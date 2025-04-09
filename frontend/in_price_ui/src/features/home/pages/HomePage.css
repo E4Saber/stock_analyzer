@@ -1,0 +1,79 @@
+/* src/features/home/pages/Homepage.css */
+
+/* 搜索区域样式 */
+.search-section {
+  margin-top: 0;
+}
+
+.search-box {
+  background-color: var(--bg-secondary);
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px var(--shadow-color);
+}
+
+.search-input-container {
+  margin-bottom: 16px;
+}
+
+.hot-search {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hot-search-label {
+  margin-right: 8px;
+  color: var(--text-secondary);
+}
+
+.hot-tag {
+  cursor: pointer;
+  margin-bottom: 8px;
+  background-color: var(--accent-light);
+  color: var(--accent-color);
+  border: none;
+}
+
+/* 新闻弹幕区域样式 */
+.news-section {
+  margin-top: 0;
+  flex-grow: 1;
+}
+
+.news-container {
+  position: relative;
+  height: 120px;
+  background-color: var(--danmaku-bg);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px var(--shadow-color);
+}
+
+.news-danmaku-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.danmaku-track {
+  position: absolute;
+  width: 100%;
+  height: 40px;
+}
+
+.news-item {
+  position: absolute;
+  padding: 4px 12px;
+  border-radius: 16px;
+  background-color: var(--danmaku-bg);
+  color: var(--text-primary);
+  white-space: nowrap;
+  font-size: 14px;
+  transition: transform 0.3s, background-color 0.3s;
+}
+
+.news-item-hover {
+  background-color: var(--danmaku-hover-bg);
+  transform: scale(1.05);
+}

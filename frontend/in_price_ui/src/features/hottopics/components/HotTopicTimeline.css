@@ -1,0 +1,105 @@
+/* 时间轴样式修复 - 防止信息重叠 */
+
+/* 时间轴卡片样式 */
+.timeline-card {
+    width: 100%;
+    overflow: hidden; /* 防止内容溢出 */
+  }
+  
+  .timeline-card .ant-card-body {
+    padding: 12px; /* 减少内边距 */
+  }
+  
+  /* 自定义时间轴样式 */
+  .custom-timeline {
+    position: relative;
+    padding-right: 40px; /* 为右侧内容预留空间 */
+  }
+  
+  /* 垂直轴线 */
+  .timeline-line {
+    position: absolute;
+    right: 20px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #f0f0f0;
+    z-index: 1;
+  }
+  
+  /* 时间轴项目 */
+  .timeline-item {
+    position: relative;
+    margin-bottom: 16px;
+    padding-right: 30px; /* 为右侧圆点和标签留出空间 */
+  }
+  
+  /* 时间轴圆点 */
+  .timeline-dot {
+    position: absolute;
+    right: -20px;
+    top: 10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    z-index: 2;
+  }
+  
+  /* 热度标签 */
+  .timeline-heat {
+    position: absolute;
+    right: -35px;
+    top: 8px;
+    z-index: 2;
+  }
+  
+  .timeline-heat .ant-tag {
+    font-size: 11px;
+    padding: 0 4px;
+    min-width: 30px;
+    text-align: center;
+    margin-right: 0;
+  }
+  
+  /* 内容卡片 */
+  .timeline-content {
+    background-color: #f9f9f9;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-right: 10px; /* 防止内容与右侧元素重叠 */
+  }
+  
+  .timeline-content:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* 时间戳 */
+  .timeline-timestamp {
+    margin-bottom: 4px;
+  }
+  
+  .timeline-timestamp .ant-typography {
+    font-size: 11px;
+  }
+  
+  /* 标题 */
+  .timeline-title {
+    font-size: 13px;
+    line-height: 1.4;
+    display: block;
+    word-break: break-word; /* 确保长文本会换行 */
+    padding-right: 4px; /* 防止文字紧贴右侧 */
+  }
+  
+  /* 标签区域 */
+  .timeline-tags {
+    margin-top: 4px;
+  }
+  
+  .timeline-tags .ant-tag {
+    font-size: 11px;
+    padding: 0 4px;
+    margin: 0 2px 2px 0;
+  }

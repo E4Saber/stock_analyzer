@@ -1,0 +1,127 @@
+/* 为下拉菜单添加的额外样式 */
+/* 头部导航栏固定定位 */
+.ant-layout-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 64px;
+  background-color: var(--header-bg);
+  box-shadow: 0 1px 4px var(--shadow-color);
+  padding: 0;
+  transition: background-color 0.3s ease;
+}
+/* 自定义导航栏内容样式 */
+.inprice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  padding: 0 24px;
+}
+
+.right-nav {
+  display: flex;
+  align-items: center;
+}
+
+.theme-switcher {
+  margin-right: 8px;
+}
+
+.theme-switch {
+  background-color: var(--accent-color);
+}
+
+.inprice-logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--accent-color);
+  margin-right: 48px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.inprice-nav {
+  display: flex;
+  align-items: center;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.nav-item:hover {
+  color: var(--accent-color);
+}
+
+.nav-item.active {
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+}
+
+/* 下拉菜单导航项 */
+.dropdown-nav-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* 保证下拉菜单中的Space组件正确对齐 */
+.dropdown-nav-item .ant-space {
+  display: flex;
+  align-items: center;
+}
+  
+/* 自定义下拉菜单样式 */
+.ant-dropdown-menu {
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+  
+.ant-dropdown-menu-item {
+  padding: 8px 16px;
+}
+  
+.ant-dropdown-menu-item:hover {
+  background-color: rgba(24, 144, 255, 0.1);
+}
+
+.ant-dropdown-menu-item .anticon {
+  margin-right: 8px;
+  color: #1890ff;
+}
+
+/* 确保下拉图标样式正确 */
+.dropdown-nav-item .ant-space-item:last-child {
+  margin-left: 4px;
+}
+
+/* 修复链接样式 */
+.inprice-nav a,
+.inprice-nav a:hover {
+  text-decoration: none;
+}
+
+/* 确保下拉菜单在深色模式下的样式 */
+[data-theme='dark'] .ant-dropdown-menu {
+  background-color: #1f1f1f;
+  border: 1px solid #303030;
+}
+
+[data-theme='dark'] .ant-dropdown-menu-item {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+[data-theme='dark'] .ant-dropdown-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}

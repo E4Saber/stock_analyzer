@@ -1,0 +1,29 @@
+.page-container {
+    padding: 0;
+    background-color: var(--bg-secondary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 内容区域 */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 5px 8px;
+    margin-top: 64px; /* 与 Header 高度一致，替代 padding-top */
+    transition: background-color 0.3s ease;
+    background-color: var(--bg-primary);
+    overflow-y: auto;
+}
+
+/* 页面内容区域 */
+.page-content {
+    padding: 16px;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    box-shadow: 0 1px 4px var(--shadow-color);
+    height: 100%;
+    overflow: visible;
+}

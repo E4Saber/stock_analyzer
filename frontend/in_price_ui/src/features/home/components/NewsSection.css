@@ -1,0 +1,69 @@
+
+/* 热点新闻区域 */
+.news-section {
+    padding: 20px 0 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+  
+.news-container {
+    width: 85%;
+    max-width: 1000px;
+    height: 120px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+  
+.news-danmaku-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding-top: 8px;
+    box-sizing: border-box;
+}
+
+/* 弹幕轨道 */
+.danmaku-track {
+    position: absolute;
+    width: 100%;
+    height: 36px;
+    overflow: hidden;
+}
+
+/* 弹幕项目 */
+.news-item {
+    position: absolute;
+    padding: 6px 12px;
+    background-color: var(--danmaku-bg);
+    border-radius: 20px;
+    font-size: 14px;
+    white-space: nowrap;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 1px 3px var(--shadow-color);
+    border-left: 3px solid var(--accent-color);
+    color: var(--text-primary);
+    top: 0;
+    transition-property: left, background-color, transform, box-shadow;
+    transition-timing-function: linear, ease, ease, ease;
+    transition-duration: inherit, 0.2s, 0.2s, 0.2s;
+    will-change: left;
+    z-index: 1;
+}
+  
+.news-item-hover {
+    background-color: var(--danmaku-hover-bg);
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px var(--shadow-color);
+    z-index: 2;
+}

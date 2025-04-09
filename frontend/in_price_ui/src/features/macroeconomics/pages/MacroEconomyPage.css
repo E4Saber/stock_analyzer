@@ -1,0 +1,94 @@
+/* src/features/macro/styles/MacroEconomy.css */
+
+.macro-indicator-card {
+    height: 100%;
+    transition: all 0.3s;
+  }
+  
+  .macro-indicator-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
+  }
+  
+  /* 指标卡片标题 */
+  .macro-indicator-card .ant-card-head {
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #e8e8e8;
+  }
+  
+  /* 新闻列表样式 */
+  .macro-news-list .ant-list-item {
+    padding: 12px 0;
+    transition: background-color 0.3s;
+  }
+  
+  .macro-news-list .ant-list-item:hover {
+    background-color: #f5f5f5;
+  }
+  
+  /* 标签颜色定制 */
+  .news-tag-policy {
+    color: #1890ff;
+    background: #e6f7ff;
+    border-color: #91d5ff;
+  }
+  
+  .news-tag-data {
+    color: #52c41a;
+    background: #f6ffed;
+    border-color: #b7eb8f;
+  }
+  
+  .news-tag-trade {
+    color: #fa8c16;
+    background: #fff7e6;
+    border-color: #ffd591;
+  }
+  
+  /* 指标趋势图区域 */
+  .chart-container {
+    height: 240px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fafafa;
+    border-radius: 4px;
+    border: 1px dashed #d9d9d9;
+  }
+  
+  /* Tab 样式优化 */
+  .macro-tabs .ant-tabs-nav {
+    margin-bottom: 16px;
+  }
+  
+  .macro-tabs .ant-tabs-tab {
+    padding: 8px 16px;
+    font-weight: 500;
+  }
+  
+  .macro-tabs .ant-tabs-tab-active {
+    font-weight: 600;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .indicator-row .ant-col {
+      margin-bottom: 16px;
+    }
+  }
+  
+  /* 分隔线样式 */
+  .section-divider {
+    margin: 24px 0;
+    font-weight: 500;
+  }
+  
+  .section-divider .anticon {
+    margin-right: 8px;
+  }
+  
+  /* 更新时间样式 */
+  .update-time {
+    color: #8c8c8c;
+    font-size: 12px;
+  }
