@@ -11,8 +11,8 @@ import {
   DollarOutlined,
   ShareAltOutlined
 } from '@ant-design/icons';
-import MacroChart from '../components/charts/MacroEconomyChart';
-import MacroEconomyNewsModal from '../components/modal/MacroEconomyNewsModal';
+import MacroChart from '../components/MacroEconomyChart';
+import MacroEconomyNewsModal from '../components/MacroEconomyNewsModal';
 
 // 导入CSS样式
 import './MacroEconomyPage.css';
