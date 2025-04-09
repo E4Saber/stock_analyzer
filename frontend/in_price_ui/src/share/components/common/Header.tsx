@@ -38,28 +38,41 @@ const Header: React.FC = () => {
   };
 
   // 市场二级菜单
-  const marketMenu = (
-    <Menu
-      onClick={({ key }) => navigate(key)}
-      items={[
-        {
-          key: '/market/overview',
-          label: '市场概览',
-          icon: <BarChartOutlined />
-        },
-        // {
-        //   key: '/market/sector',
-        //   label: '行业板块',
-        //   icon: <FundOutlined />
-        // },
-        // {
-        //   key: '/market/index',
-        //   label: '指数分析',
-        //   icon: <LineChartOutlined />
-        // }
-      ]}
-    />
-  );
+  const marketMenuItems = [
+    {
+      key: '/market/overview',
+      label: '市场概览',
+      icon: <BarChartOutlined />
+    },
+    {
+      key: '/market/sector',
+      label: '行业板块',
+      icon: <FundOutlined />
+    },
+    {
+      key: '/market/index',
+      label: '指数分析',
+      icon: <LineChartOutlined />
+    }
+  ];
+
+  // 股票二级菜单
+  const stockMenuItems = [
+    {
+      key: '/stock/list',
+      label: '股票一览',
+      icon: <BarChartOutlined />
+    },
+    {
+      key: '/stock/details',
+      label: '个股详情',
+      icon: <LineChartOutlined />
+    }
+  ];
+  
+  const handleMenuClick = ({ key }: { key: string }) => {
+    navigate(key);
+  };
 
   return (
     <header className="inprice-header">
@@ -82,10 +95,31 @@ const Header: React.FC = () => {
           </div>
         </Link>
         
-        <Dropdown overlay={marketMenu} placement="bottom">
+        <Dropdown 
+          menu={{ 
+            items: marketMenuItems, 
+            onClick: handleMenuClick 
+          }} 
+          placement="bottom"
+        >
           <div className={`nav-item dropdown-nav-item ${isActive('/market') ? 'active' : ''}`}>
             <Space>
               <StockOutlined /> 市场
+              <DownOutlined style={{ fontSize: '12px' }} />
+            </Space>
+          </div>
+        </Dropdown>
+
+        <Dropdown 
+          menu={{ 
+            items: stockMenuItems, 
+            onClick: handleMenuClick 
+          }} 
+          placement="bottom"
+        >
+          <div className={`nav-item dropdown-nav-item ${isActive('/stock') ? 'active' : ''}`}>
+            <Space>
+              <StockOutlined /> 股
               <DownOutlined style={{ fontSize: '12px' }} />
             </Space>
           </div>

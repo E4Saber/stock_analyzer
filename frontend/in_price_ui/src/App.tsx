@@ -17,6 +17,7 @@ import HotTopicsPage from '../src/features/hottopics/pages/HotTopicsPage';
 
 // Import styles
 import './App.css';
+import StockListPage from './features/stocks/pages/StockListPage';
 // 如果使用单独的导航样式文件，取消下面的注释
 // import './styles/navigation.css';
 
@@ -43,6 +44,9 @@ const App: React.FC = () => {
 
               {/* 热点话题路由 */}
               <Route path="/hot-topics" element={<HotTopicsPage />} />
+
+              {/* 股 */}
+              <Route path="/stock/list" element={<StockListPage />} />
             </Routes>
           </Content>
           

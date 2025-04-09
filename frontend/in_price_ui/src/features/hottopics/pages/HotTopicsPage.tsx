@@ -36,7 +36,7 @@ import {
   hotTopicsData, 
   expertOpinionsData, 
   getHotTopicById
-} from '../service/hotTopicsData';
+} from '../services/hotTopicsData';
 
 // 导入样式
 import './HotTopicsPage.css';
