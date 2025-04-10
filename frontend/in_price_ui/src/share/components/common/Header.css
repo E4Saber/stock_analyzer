@@ -1,17 +1,12 @@
-/* 为下拉菜单添加的额外样式 */
-/* 头部导航栏固定定位 */
+/* 移除头部导航栏固定定位 */
 .ant-layout-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
   height: 64px;
   background-color: var(--header-bg);
   box-shadow: 0 1px 4px var(--shadow-color);
   padding: 0;
   transition: background-color 0.3s ease;
 }
+
 /* 自定义导航栏内容样式 */
 .inprice-header {
   display: flex;

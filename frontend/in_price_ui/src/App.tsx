@@ -9,17 +9,17 @@ import Header from '../src/share/components/common/Header';
 import Footer from '../src/share/components/common/Footer';
 
 // pages
-import Homepage from '../src/features/home/pages/Homepage';
-import MarketPage from '../src/features/market/pages/MarketPage';
-import MarketOverviewPage from '../src/features/market/pages/MarketOverviewPage';
-import MacroEconomyPage from '../src/features/macroeconomics/pages/MacroEconomyPage';
-import HotTopicsPage from '../src/features/hottopics/pages/HotTopicsPage';
+import Homepage from './features/home/pages/Homepage';
+import MarketPage from './features/market/pages/MarketPage';
+import MarketOverviewPage from './features/market/pages/MarketOverviewPage';
+import MarketSectorPage from './features/market/pages/MarketSectorPage';
+import MacroEconomyPage from './features/macroeconomics/pages/MacroEconomyPage';
+import HotTopicsPage from './features/hottopics/pages/HotTopicsPage';
 
 // Import styles
 import './App.css';
 import StockListPage from './features/stocks/pages/StockListPage';
-// 如果使用单独的导航样式文件，取消下面的注释
-// import './styles/navigation.css';
+
 
 const { Header: AntHeader, Content, Footer: AntFooter } = Layout;
 
@@ -28,17 +28,19 @@ const App: React.FC = () => {
     <ConfigProvider locale={zhCN}>
       <Router>
         <Layout className="page-container">
-          <AntHeader>
-            <Header />
-          </AntHeader>
 
           <Content className="content-area">
+            <AntHeader>
+              <Header />
+            </AntHeader>
+            
             <Routes>
               <Route path="/" element={<Homepage />} />
               {/* 市场相关路由 */}
               <Route path="/market" element={<MarketPage />} />
               <Route path="/market/overview" element={<MarketOverviewPage />} />
-              
+              <Route path="/market/sector" element={<MarketSectorPage />} />
+
               {/* 宏观经济路由 */}
               <Route path="/macro" element={<MacroEconomyPage />} />
 
@@ -48,11 +50,12 @@ const App: React.FC = () => {
               {/* 股 */}
               <Route path="/stock/list" element={<StockListPage />} />
             </Routes>
+            
+            <AntFooter>
+              <Footer />
+            </AntFooter>
           </Content>
           
-          <AntFooter>
-            <Footer />
-          </AntFooter>
         </Layout>
       </Router>
     </ConfigProvider>

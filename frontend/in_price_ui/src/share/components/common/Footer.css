@@ -1,8 +1,14 @@
-/* 页脚样式 */
+/* 页脚样式 - 正常流布局 */
 .ant-layout-footer {
   text-align: center;
   padding: 16px 50px;
   color: var(--text-secondary);
   background-color: var(--bg-primary);
   transition: background-color 0.3s ease;
+  /* footer不需要额外的定位样式，它会自然地跟随内容 */
+}
+
+.inprice-footer {
+  margin-top: 8px;
+  font-size: 14px;
 }

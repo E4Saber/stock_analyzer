@@ -6,13 +6,13 @@
     flex-direction: column;
 }
 
-/* 内容区域 */
+/* 内容区域 - 移除了margin-top */
 .content-area {
     flex: 1;
     display: flex;
     flex-direction: column;
     padding: 5px 8px;
-    margin-top: 64px; /* 与 Header 高度一致，替代 padding-top */
+    /* 移除了 margin-top: 64px; 因为header不再固定 */
     transition: background-color 0.3s ease;
     background-color: var(--bg-primary);
     overflow-y: auto;

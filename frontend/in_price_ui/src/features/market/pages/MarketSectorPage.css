@@ -1,0 +1,181 @@
+/* src/features/market/pages/MarketSectorPage.css */
+
+/* 板块热力图容器 */
+.sector-heatmap {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(11, 35px) 70px;
+    gap: 4px;
+    margin-bottom: 16px;
+    grid-template-areas:
+      "semi semi semi semi semi software software software software cloud cloud cloud"
+      "semi semi semi semi semi software software software software cloud cloud cloud"
+      "semi semi semi semi semi software software software software cloud cloud cloud"
+      "semi semi semi semi semi hardware hardware hardware hardware cloud cloud cloud"
+      "semi semi semi semi semi hardware hardware hardware hardware newenergy newenergy newenergy"
+      "bank bank bank bank bank hardware hardware hardware hardware newenergy newenergy newenergy"
+      "bank bank bank bank bank pharma pharma pharma pharma newenergy newenergy newenergy"
+      "bank bank bank bank bank pharma pharma pharma pharma medical medical medical"
+      "insurance insurance insurance securities securities pharma pharma pharma pharma medical medical medical"
+      "insurance insurance insurance securities securities healthcare healthcare healthcare coal coal coal coal"
+      "insurance insurance insurance securities securities healthcare healthcare healthcare coal coal coal coal"
+      "finance finance finance power power power power power power power power power";
+    min-height: 420px; /* 保证足够的高度 */
+  }
+  
+  /* 单个板块项目 */
+  .sector-item {
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 8px;
+  }
+  
+  .sector-item:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1;
+  }
+  
+  /* 内容居中显示 */
+  .sector-content {
+    width: 100%;
+    text-align: center;
+    user-select: none; /* 防止文字被选中 */
+  }
+  
+  .sector-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .sector-change {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  /* 涨跌颜色 - 中国市场风格 */
+  .rising {
+    background-color: #e60012; /* 正红色 - 上涨 */
+  }
+  
+  .falling {
+    background-color: #19a15f; /* 绿色 - 下跌 */
+  }
+  
+  .strong-rising {
+    background-color: #c00000; /* 深红 - 强势上涨 */
+  }
+  
+  .strong-falling {
+    background-color: #007a3d; /* 深绿 - 强势下跌 */
+  }
+  
+  /* 图例样式 */
+  .sector-legend {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin-left: 16px;
+    font-size: 12px;
+  }
+  
+  .legend-color {
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    border-radius: 2px;
+  }
+  
+  .legend-color.strong-rising {
+    background-color: #c00000;
+  }
+  
+  .legend-color.rising {
+    background-color: #e60012;
+  }
+  
+  .legend-color.falling {
+    background-color: #19a15f;
+  }
+  
+  .legend-color.strong-falling {
+    background-color: #007a3d;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .sector-heatmap {
+      grid-template-rows: repeat(12, 25px);
+    }
+    
+    .sector-name {
+      font-size: 12px;
+    }
+    
+    .sector-change {
+      font-size: 12px;
+    }
+  }
+  
+  /* 添加鼠标悬停提示框 */
+  .sector-item::after {
+    content: attr(data-marketcap);
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 2px;
+    font-size: 12px;
+    bottom: 0;
+    right: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  
+  .sector-item:hover::after {
+    opacity: 1;
+  }
+  
+  /* 右侧榜单样式优化 */
+  .ant-list-sm .ant-list-item {
+    padding: 6px 0;
+  }
+  
+  .ant-card-body {
+    padding: 16px;
+  }
+  
+  /* 使热力图和右侧榜单高度匹配 */
+  .right-sidebar .ant-card-body {
+    height: 200px;
+    overflow-y: auto;
+  }
+  
+  /* 标签样式优化 */
+  .ant-tag {
+    margin-bottom: 5px;
+  }
