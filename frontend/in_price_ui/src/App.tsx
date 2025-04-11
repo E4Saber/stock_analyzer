@@ -19,6 +19,7 @@ import HotTopicsPage from './features/hottopics/pages/HotTopicsPage';
 // Import styles
 import './App.css';
 import StockListPage from './features/stocks/pages/StockListPage';
+import StockDetailsPage from './features/stocks/pages/StockDetailsPage';
 
 
 const { Header: AntHeader, Content, Footer: AntFooter } = Layout;
@@ -49,6 +50,7 @@ const App: React.FC = () => {
 
               {/* 股 */}
               <Route path="/stock/list" element={<StockListPage />} />
+              <Route path="/stock/details/:stockCode" element={<StockDetailsPage />} />
             </Routes>
             
             <AntFooter>

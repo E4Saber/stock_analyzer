@@ -1,0 +1,178 @@
+/* src/features/stocks/pages/StockDetailsPage.css */
+
+.stock-details-page {
+    padding: 16px;
+  }
+  
+  .stock-header {
+    margin-bottom: 24px;
+  }
+  
+  .stock-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  
+  .stock-price-container {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .stock-price {
+    font-size: 32px;
+    font-weight: 600;
+  }
+  
+  .stock-change {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .price-up {
+    color: #f5222d;
+  }
+  
+  .price-down {
+    color: #52c41a;
+  }
+  
+  .stock-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  
+  .metric-item {
+    padding: 6px 0;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .metric-label {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  .metric-value {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .chart-card {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .news-list {
+    padding-left: 16px;
+    margin: 0;
+  }
+  
+  .news-item {
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  
+  .tags-container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .comments-container {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .comment-item {
+    margin-bottom: 8px;
+  }
+  
+  .comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  
+  .comment-author {
+    font-weight: 500;
+  }
+  
+  .comment-time {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+  }
+  
+  .financial-report-container {
+    padding: 8px 0;
+  }
+  
+  .growth-rate {
+    margin-top: 4px;
+    font-size: 13px;
+  }
+  
+  .growth-rate.positive {
+    color: #f5222d;
+  }
+  
+  .growth-rate.negative {
+    color: #52c41a;
+  }
+  
+  .metric-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .metric-label {
+    color: rgba(0, 0, 0, 0.65);
+  }
+  
+  .metric-value {
+    font-weight: 500;
+    text-align: right;
+  }
+  
+  .company-info-container {
+    padding: 8px 0;
+  }
+  
+  .management-list {
+    margin-top: 12px;
+  }
+  
+  /* 深色模式下的样式 */
+  [data-theme='dark'] .price-up {
+    color: #ff4d4f;
+  }
+  
+  [data-theme='dark'] .price-down {
+    color: #73d13d;
+  }
+  
+  [data-theme='dark'] .chart-placeholder {
+    background: #141414 !important;
+    color: #fff;
+  }
+  
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .stock-actions {
+      justify-content: flex-start;
+      margin-top: 12px;
+    }
+    
+    .stock-price {
+      font-size: 28px;
+    }
+    
+    .stock-change {
+      font-size: 16px;
+    }
+  }
